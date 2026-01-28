@@ -340,15 +340,19 @@ export default class UNISdMilestoneTimeline extends NavigationMixin(LightningEle
 
     _computeIsEditable() {
         const base = !!this.baseEditable;
-        if (!base) {
-            return false;
-        }
         if (this.contextObjectApiName === 'uNI_ReprogrammingRequest__c') {
             const ia = this._normalizeVersion(this.iaLogframeVersion);
-            const rr = this._normalizeVersion(this.rrDefaultVersion);
-            if (ia && rr && ia === rr) {
-                return false;
+            const selected = this._normalizeVersion(
+                this.activeVersion || this._version
+            );
+            if (ia && selected) {
+                return ia !== selected;
             }
+            const rr = this._normalizeVersion(this.rrDefaultVersion);
+            if (ia && rr) {
+                return ia !== rr;
+            }
+            return base;
         }
         return base;
     }

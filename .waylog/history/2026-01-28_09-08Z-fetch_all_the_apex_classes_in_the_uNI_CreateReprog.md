@@ -1004,3 +1004,196 @@ Next steps?
 2. Run a quick UI check on Milestone tabs to confirm the read‑only behavior in RR context.
 
 ---
+
+
+**User**
+
+uNI_sd_milestoneTracker and uNI_sd_milestoneTimeline not working as expected, when the component is placed in the lightning page of uNI_ReprogrammingRequest__c object , the read only function is not working as expected. v2 is not editable (it should be)
+
+---
+
+
+**OpenAI Codex**
+
+I see why this is confusing. With the current guard, the Milestone components only force read‑only when **RR logframe version == IA logframe version**. So if v2 is locked, it’s because one of these is true:
+
+1) `result.isEditable` from `getMilestoneData` is already `false` (Apex logic), or  
+2) The component is actually seeing **RR version == IA version** (both “2”).
+
+To fix this correctly, I need to confirm which case you’re in.
+
+Can you share the **uNI_ReprogrammingRequest__c record Id** you’re testing with?  
+I can run SOQL to check:
+- `uNI_ReprogrammingRequest__c.uNI_LogframeVersion__c`
+- `IndividualApplication.uNI_LogframeVersion__c`
+
+If you prefer, I can also add temporary console logs in the LWC to show:
+- base `result.isEditable`
+- IA version
+- RR version
+- computed `isEditable`
+
+Tell me which you want and I’ll proceed.
+
+---
+
+
+**User**
+
+IA id : 0iTFT00000004212AA
+Reprogramming id: a14FT00000jbu6KYAQ
+
+---
+
+
+**OpenAI Codex**
+
+Updated the Milestone components so RR context editability is based on the **selected version** (activeVersion) vs IA logframe version, not the Apex `isEditable` flag. This should make v2 editable when IA version is 1, while still keeping v1 read‑only.
+
+Files:
+- `force-app/main/default/lwc/uNI_sd_milestoneTracker/uNI_sd_milestoneTracker.js`
+- `force-app/main/default/lwc/uNI_sd_milestoneTimeline/uNI_sd_milestoneTimeline.js`
+
+Logic now:
+- If on RR record page and **IA version != selected version**, allow edit.
+- If **IA version == selected version**, force read‑only.
+- Non‑RR context stays on existing `result.isEditable` behavior.
+
+Please re-test on RR record `a14FT00000jbu6KYAQ` with version 2 selected. If it’s still read‑only, I’ll add temporary console logs to trace `iaVersion`, `selectedVersion`, and the computed edit flag.
+
+---
+
+
+**User**
+
+it will be editable when iam drafting the logframe for the first time right?
+
+---
+
+
+**OpenAI Codex**
+
+Yes — the drafting behavior stays as‑is.
+
+In the Milestone components, I only added the extra RR‑context guard. Outside RR, they still follow `result.isEditable` from Apex (the existing logic). So when you’re drafting the logframe for the first time, editability is controlled exactly the way it was before.
+
+---
+
+
+**User**
+
+okk, i have finalized the v1 of the budgetdata, but when i navigate to the budgetdata lwc (via budgettab) its still asking me to finalize the budget table ( this was already done while creating the budget table)
+
+---
+
+
+**OpenAI Codex**
+
+From the code, that “Finalize Budget Table” screen shows only when `showTable` is false, which happens when `getBudgetData` returns **no selected columns** (from `uNI_BudgetDataColumns__c` with `is_Active__c = true`).  
+
+I checked IA `0iTFT00000004212AA` and it **does** have an active columns record with values, so for that IA the UI should not ask you to finalize again. That means one of these is happening:
+
+- You’re on a **different IA/RR record** than `0iTFT00000004212AA`, so the component can’t find an active `uNI_BudgetDataColumns__c`.
+- The BudgetTab is **passing the wrong recordId** to BudgetData (e.g., RR id instead of IA) because `uNI_Investment__c` is missing on that RR.
+- `getBudgetData` is erroring (silent catch) so `selectedColumns` never gets set.
+
+To pinpoint it, can you confirm:
+1) The **recordId** where this is happening (IA or RR).  
+2) Which **version** is selected in the BudgetTab at the time?
+
+If you want, I can also add a short toast/console log in `uNI_BudgetData` to print:
+`recordId`, `version`, `selectedColumns.length`, and whether `getBudgetData` threw an error.
+
+---
+
+
+**User**
+
+cant you query nessasary data and do it yourself?
+
+---
+
+
+**OpenAI Codex**
+
+I ran the org queries. For IA `0iTFT00000004212AA`, there **is** an active `uNI_BudgetDataColumns__c` record with columns, but both custom label fields are **null**:
+
+- `uNI_Custom_Columns_Original_Labels__c = null`
+- `uNI_Custom_Columns_Updated_Labels__c = null`
+
+In `uNI_BudgetDataController.getBudgetData`, those fields are split without null checks, so it throws a null‑pointer and the LWC falls back to showing the “Finalize Budget Table” screen.
+
+I’ve fixed it locally with null‑safe handling in:
+- `force-app/main/default/classes/uNI_BudgetDataController.cls`
+
+So now it won’t error if those fields are null and the table will load as expected.
+
+If you want, I can also update the existing record in org to set those fields to empty strings (no deploy required), but I won’t do any data changes unless you say so.
+
+---
+
+
+**User**
+
+in the   uNI_CloneBudgetData we are cloning everything uNI_BudgetDataController enters right ? keeping in mind the sequence of running of the cloning of data in the uNI_CreateReprogrammingRequest and uNI_ReturnReprogrammingRequest ?
+
+---
+
+
+**User**
+
+<turn_aborted>
+  <turn_id>79</turn_id>
+  <reason>interrupted</reason>
+  <guidance>The user interrupted the previous turn. Do not continue or repeat work from that turn unless the user explicitly asks. If any tools/commands were aborted, they may have partially executed; verify current state before retrying.</guidance>
+</turn_aborted>
+
+---
+
+
+**User**
+
+in the   uNI_CloneBudgetData we are cloning everything uNI_BudgetDataController enters right ? keeping in mind the sequence of running of the cloning of data in the uNI_CreateReprogrammingRequest and uNI_ReturnReprogrammingRequest ?
+
+i suspect some of the data is getting missed. like the organization name years and all? can you please check ?
+
+---
+
+
+**OpenAI Codex**
+
+Short answer: **No — `uNI_CloneBudgetData` does *not* clone everything that `uNI_BudgetDataController` writes**, and I can see a real mismatch in your org.
+
+What `uNI_CloneBudgetData` actually clones
+- It clones **Summary Budgets**, **Expense Types**, and **Budget Data rows** for the source version → target version.
+- It does **not** clone:
+  - `uNI_BudgetDataColumns__c` (the column selections),
+  - Custom budget data fields (`uNI_Custom1..12__c`) — those fields aren’t even queried in the clone.
+  - Portfolio Outputs are **not remapped** to the new logframe outputs.
+
+Sequence in the flows
+- In both **Create** and **Return** flows, `uNI_CloneLogframe` runs first (creates v2 outputs), then later `uNI_CloneBudgetData` runs.  
+  So the new outputs *do exist* by the time budget data is cloned.
+
+What I checked in your org (IA `0iTFT00000004212AA`)
+- **BudgetData v2 rows exist (12 rows).**
+- **Those rows point to Outputs that are still version 1.**
+  - Example outputs referenced by v2 budget data:
+    - `a0aFT00000D4bwsYAB`, `a0aFT00000D4rBeYAJ`, `a0aFT00000D4s3xYAB`, `a0aFT00000D4s5ZYAR`
+  - All of those outputs are **uNI_Version__c = 1**.
+- **Summary Budgets referenced are version 2** (so org names should be OK).
+
+Why it looks like “missing data”
+The **BudgetData LWC only shows outputs filtered by version**.  
+Since the cloned budget rows still point to **v1 outputs**, those outputs **don’t appear** in the v2 output picklist → rows look blank.
+
+So yes — **outputs (and custom fields) are being missed** during cloning.
+
+If you want, I can fix it by:
+1. **Mapping old → new output IDs** after `uNI_CloneLogframe` (using `uNI_InternalSequence__c` and/or title), then updating the cloned BudgetData rows.
+2. **Including Custom1–12 fields** in the clone query.
+3. (Optional) adjust the guard so budget rows don’t skip if summary budgets already exist.
+
+Tell me if you want me to implement that.
+
+---

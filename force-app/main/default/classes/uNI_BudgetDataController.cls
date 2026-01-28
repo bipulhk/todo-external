@@ -30,10 +30,14 @@ public without sharing class uNI_BudgetDataController {
                 bdColumns[0].uNI_Budget_Data_Columns__c.split(';')
             );
 
-            // Split fields
+            // Split fields (null-safe for older records that don't have custom label values)
             List<String> budgetCols  = bdColumns[0].uNI_Budget_Data_Columns__c.split(';');
-            List<String> updatedLbls = bdColumns[0].uNI_Custom_Columns_Updated_Labels__c.split('\\|\\|\\|');
-            List<String> originalLbls= bdColumns[0].uNI_Custom_Columns_Original_Labels__c.split('\\|\\|\\|');
+            List<String> updatedLbls = String.isBlank(bdColumns[0].uNI_Custom_Columns_Updated_Labels__c)
+                ? new List<String>()
+                : bdColumns[0].uNI_Custom_Columns_Updated_Labels__c.split('\\|\\|\\|');
+            List<String> originalLbls = String.isBlank(bdColumns[0].uNI_Custom_Columns_Original_Labels__c)
+                ? new List<String>()
+                : bdColumns[0].uNI_Custom_Columns_Original_Labels__c.split('\\|\\|\\|');
 
 
             for (String budgetCol : budgetCols) {
@@ -42,7 +46,7 @@ public without sharing class uNI_BudgetDataController {
                 // Find match in updated labels
                 Integer idx = updatedLbls.indexOf(budgetCol);
 
-                if (idx != -1) {
+                if (idx != -1 && idx < originalLbls.size() && idx < updatedLbls.size()) {
                     String originalLabel = originalLbls[idx];
                     String customLabel = updatedLbls[idx];
 
