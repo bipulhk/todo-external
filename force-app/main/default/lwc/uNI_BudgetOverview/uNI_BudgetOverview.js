@@ -4,7 +4,11 @@ import getTables from '@salesforce/apex/uNI_BudgetOverviewController.getTables';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { CloseActionScreenEvent } from 'lightning/actions';
 import { CurrentPageReference } from 'lightning/navigation';
-import { getRecord } from 'lightning/uiRecordApi';
+import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+import IA_LOGFRAME_VERSION from '@salesforce/schema/IndividualApplication.uNI_LogframeVersion__c';
+import RR_LOGFRAME_VERSION from '@salesforce/schema/uNI_ReprogrammingRequest__c.uNI_LogframeVersion__c';
+import getObjectApiName
+    from '@salesforce/apex/uNI_ReprogrammingObjectCheck.getObjectApiName';
 
 export default class uNI_BudgetOverviewController extends LightningElement {
     @api table1 = {};
@@ -21,6 +25,10 @@ export default class uNI_BudgetOverviewController extends LightningElement {
     isReadOnly = true;
     baseReadOnly = false;
     iaRecord;
+    contextRecordId;
+    contextObjectApiName;
+    rrDefaultVersion;
+    rrDefaultLoaded = false;
 
     _recordId;
     _version;
@@ -97,6 +105,16 @@ export default class uNI_BudgetOverviewController extends LightningElement {
 
         const state = currentPageReference.state || {};
         const attrs = currentPageReference.attributes || {};
+
+        const contextId =
+            state.recordId ||
+            attrs.recordId ||
+            state.c__recordId ||
+            null;
+        if (contextId && contextId !== this.contextRecordId) {
+            this.contextRecordId = contextId;
+            this.updateReadOnlyState();
+        }
 
         const possibleRecordId = 
             this.recordId ||
@@ -407,12 +425,59 @@ export default class uNI_BudgetOverviewController extends LightningElement {
         }
     }
 
-    @wire(getRecord, { recordId: '$recordId', fields: [] })
-    wiredIARecord() {
-        // wire retained for potential refresh callbacks
+    @wire(getRecord, { recordId: '$recordId', fields: [IA_LOGFRAME_VERSION] })
+    wiredIARecord({ data, error }) {
+        if (data) {
+            this.iaRecord = data;
+        } else if (error) {
+            console.error('BudgetOverview: error loading IA logframe version', error);
+            this.iaRecord = undefined;
+        }
+        this.updateReadOnlyState();
+    }
+
+    // ---- Determine context object type ----
+    @wire(getObjectApiName, { recordId: '$contextRecordId' })
+    wiredObjectType({ data, error }) {
+        if (data) {
+            this.contextObjectApiName = data;
+            this.updateReadOnlyState();
+        } else if (error) {
+            console.error('BudgetOverview: error resolving context object type', error);
+        }
+    }
+
+    get rrRecordId() {
+        return this.contextObjectApiName === 'uNI_ReprogrammingRequest__c'
+            ? this.contextRecordId
+            : null;
+    }
+
+    // ---- Get RR logframe version when on Reprogramming Request ----
+    @wire(getRecord, { recordId: '$rrRecordId', fields: [RR_LOGFRAME_VERSION] })
+    wiredRRRecord({ data, error }) {
+        if (data) {
+            this.rrDefaultVersion = getFieldValue(data, RR_LOGFRAME_VERSION);
+            this.rrDefaultLoaded = true;
+            this.updateReadOnlyState();
+        } else if (error) {
+            console.error('BudgetOverview: error loading RR logframe version', error);
+        }
+    }
+
+    get iaLogframeVersion() {
+        return getFieldValue(this.iaRecord, IA_LOGFRAME_VERSION);
     }
 
     updateReadOnlyState() {
+        if (this.contextObjectApiName === 'uNI_ReprogrammingRequest__c') {
+            const ia = this._normalizeVersion(this.iaLogframeVersion);
+            const rr = this._normalizeVersion(this.rrDefaultVersion);
+            if (ia && rr && ia === rr) {
+                this.isReadOnly = true;
+                return;
+            }
+        }
         if (this.isBDDraft) {
             console.log('BudgetOverview: isBDDraft -> forcing read-only');
             this.isReadOnly = true;
@@ -425,6 +490,11 @@ export default class uNI_BudgetOverviewController extends LightningElement {
             'baseReadOnly =',
             this.baseReadOnly
         );
+    }
+
+    _normalizeVersion(val) {
+        if (val === undefined || val === null) return '';
+        return String(val).trim();
     }
 
     async loadData() {

@@ -961,3 +961,22 @@ for the uNI_BudgetData lwc i mean, you are not breaking the preexisting logic ri
 Yes — for `uNI_BudgetData` the existing logic is preserved. The only added behavior is an extra **read‑only guard when the component is on uNI_ReprogrammingRequest__c and RR version == IA version**. In all other cases, it still uses the original draft/submitted + versionAhead logic exactly as before.
 
 ---
+
+
+**User**
+
+now please do for the uNI_BudgetOverview
+
+---
+
+
+**OpenAI Codex**
+
+Applied the ReprogrammingRequest context guard in `force-app/main/default/lwc/uNI_BudgetOverview/uNI_BudgetOverview.js`. It now:
+- Uses `uNI_ReprogrammingObjectCheck.getObjectApiName` to detect RR context.
+- Wires IA + RR logframe versions and compares them.
+- Forces `isReadOnly = true` when RR version == IA version, otherwise preserves existing `isBDDraft`/`baseReadOnly` behavior.
+
+Want me to proceed to the next child LWC? If yes, which one should I do next?
+
+---
