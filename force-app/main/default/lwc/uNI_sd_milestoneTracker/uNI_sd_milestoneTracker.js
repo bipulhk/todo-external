@@ -1,12 +1,16 @@
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
 import getMilestoneData from '@salesforce/apex/uNI_sd_MilestoneController.getMilestoneData';
 import createMilestoneRecord from '@salesforce/apex/uNI_sd_MilestoneController.createMilestoneRecord';
 import saveMilestoneRecords from '@salesforce/apex/uNI_sd_MilestoneController.saveMilestoneRecords';
 import submitMilestones from '@salesforce/apex/uNI_sd_MilestoneController.submitMilestones';
 import deleteMilestoneRecord from '@salesforce/apex/uNI_sd_MilestoneController.deleteMilestoneRecord';
-import { NavigationMixin } from 'lightning/navigation'; // <--- MUST BE HERE
+import { NavigationMixin, CurrentPageReference } from 'lightning/navigation'; // <--- MUST BE HERE
 import { RefreshEvent } from 'lightning/refresh';
-import { getRecordNotifyChange } from 'lightning/uiRecordApi';
+import { getRecord, getFieldValue, getRecordNotifyChange } from 'lightning/uiRecordApi';
+import IA_LOGFRAME_VERSION from '@salesforce/schema/IndividualApplication.uNI_LogframeVersion__c';
+import RR_LOGFRAME_VERSION from '@salesforce/schema/uNI_ReprogrammingRequest__c.uNI_LogframeVersion__c';
+import getObjectApiName
+    from '@salesforce/apex/uNI_ReprogrammingObjectCheck.getObjectApiName';
 
 
 
@@ -120,6 +124,11 @@ export default class UniSdMilestoneTracker extends NavigationMixin(LightningElem
     @track activeVersion = null;
     @track outputGroupings = [];
     @track isEditable = false;
+    baseEditable = false;
+    contextRecordId;
+    contextObjectApiName;
+    iaRecord;
+    rrDefaultVersion;
 
     columns = [];
     draftValues = [];
@@ -163,7 +172,8 @@ export default class UniSdMilestoneTracker extends NavigationMixin(LightningElem
                     (this.versionOptions.length ? this.versionOptions[0].value : null);
 
                 // editable flag
-                this.isEditable = !!result.isEditable;
+                this.baseEditable = !!result.isEditable;
+                this.isEditable = this._computeIsEditable();
 
                 // build groups and rows
                 this.outputGroupings = (result.outputGroupings || []).map((g, groupIdx) => {
@@ -216,6 +226,95 @@ export default class UniSdMilestoneTracker extends NavigationMixin(LightningElem
             .finally(() => {
                 this.loading = false;
             });
+    }
+
+    @wire(CurrentPageReference)
+    getStateParameters(currentPageReference) {
+        if (!currentPageReference) {
+            return;
+        }
+
+        const state = currentPageReference.state || {};
+        const attrs = currentPageReference.attributes || {};
+
+        const contextId =
+            state.recordId ||
+            attrs.recordId ||
+            state.c__recordId ||
+            null;
+        if (contextId && contextId !== this.contextRecordId) {
+            this.contextRecordId = contextId;
+            this._applyReadOnlyGuard();
+        }
+    }
+
+    @wire(getObjectApiName, { recordId: '$contextRecordId' })
+    wiredObjectType({ data, error }) {
+        if (data) {
+            this.contextObjectApiName = data;
+            this._applyReadOnlyGuard();
+        } else if (error) {
+            console.error('MilestoneTracker: error resolving context object type', error);
+        }
+    }
+
+    get rrRecordId() {
+        return this.contextObjectApiName === 'uNI_ReprogrammingRequest__c'
+            ? this.contextRecordId
+            : null;
+    }
+
+    @wire(getRecord, { recordId: '$recordId', fields: [IA_LOGFRAME_VERSION] })
+    wiredIARecord({ data, error }) {
+        if (data) {
+            this.iaRecord = data;
+        } else if (error) {
+            console.error('MilestoneTracker: error loading IA logframe version', error);
+            this.iaRecord = undefined;
+        }
+        this._applyReadOnlyGuard();
+    }
+
+    @wire(getRecord, { recordId: '$rrRecordId', fields: [RR_LOGFRAME_VERSION] })
+    wiredRRRecord({ data, error }) {
+        if (data) {
+            this.rrDefaultVersion = getFieldValue(data, RR_LOGFRAME_VERSION);
+        } else if (error) {
+            console.error('MilestoneTracker: error loading RR logframe version', error);
+        }
+        this._applyReadOnlyGuard();
+    }
+
+    get iaLogframeVersion() {
+        return getFieldValue(this.iaRecord, IA_LOGFRAME_VERSION);
+    }
+
+    _computeIsEditable() {
+        const base = !!this.baseEditable;
+        if (!base) {
+            return false;
+        }
+        if (this.contextObjectApiName === 'uNI_ReprogrammingRequest__c') {
+            const ia = this._normalizeVersion(this.iaLogframeVersion);
+            const rr = this._normalizeVersion(this.rrDefaultVersion);
+            if (ia && rr && ia === rr) {
+                return false;
+            }
+        }
+        return base;
+    }
+
+    _applyReadOnlyGuard() {
+        const next = this._computeIsEditable();
+        if (next !== this.isEditable) {
+            this.isEditable = next;
+            this.columns = this.buildColumns(this.isEditable);
+        }
+    }
+
+    _normalizeVersion(val) {
+        if (val === undefined || val === null) return '';
+        return String(val).trim();
     }
 
 buildColumns(isEditable) {

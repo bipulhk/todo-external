@@ -980,3 +980,27 @@ Applied the ReprogrammingRequest context guard in `force-app/main/default/lwc/uN
 Want me to proceed to the next child LWC? If yes, which one should I do next?
 
 ---
+
+
+**User**
+
+now the milestone tab components.
+
+---
+
+
+**OpenAI Codex**
+
+Updated the Milestone tab child components to enforce the RR context guard (RR logframe version == IA logframe version => read‑only), while preserving existing Apex-driven editability.
+
+Changes:
+- `force-app/main/default/lwc/uNI_sd_milestoneTracker/uNI_sd_milestoneTracker.js`: added RR context detection + IA/RR version wires; compute editability via guard before building columns.
+- `force-app/main/default/lwc/uNI_sd_milestoneTimeline/uNI_sd_milestoneTimeline.js`: same guard logic and wiring as tracker.
+
+`uNI_MilestoneTab` wasn’t changed since it only sets tabs/params and doesn’t control editability.
+
+Next steps?
+1. Move to the next child LWC (FERatesv / CoFunding / StaffAllocations) with the same guard.
+2. Run a quick UI check on Milestone tabs to confirm the read‑only behavior in RR context.
+
+---
