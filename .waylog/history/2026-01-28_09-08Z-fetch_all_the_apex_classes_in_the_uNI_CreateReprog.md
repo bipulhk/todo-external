@@ -901,3 +901,63 @@ Changes made:
 Please confirm this looks right and I’ll proceed to the next child LWC (uNI_FERatesv, then uNI_BudgetOverview, uNI_BudgetData, uNI_CoFunding, uNI_StaffAllocations) one by one.
 
 ---
+
+
+**User**
+
+now the budgetdata
+
+---
+
+
+**OpenAI Codex**
+
+Budget Data updated per your rules (no params passed):
+
+- It detects page context via `uNI_ReprogrammingObjectCheck`.
+- If placed on **uNI_ReprogrammingRequest__c**, it compares **RR logframe version** vs **IA logframe version**.
+- If they’re equal, it forces **read‑only**.
+- Otherwise, it keeps the **existing logic** (draft/submitted behavior, versionAhead).
+
+File updated:
+- `force-app/main/default/lwc/uNI_BudgetData/uNI_BudgetData.js`
+
+Ready for the next child LWC?
+
+---
+
+
+**User**
+
+this is not breaking any existing functionality right?
+
+---
+
+
+**OpenAI Codex**
+
+It shouldn’t break existing behavior because:
+
+- **Non‑RR contexts:** no change — it still uses the same draft/submitted + versionAhead logic.
+- **RR context:** it only adds a guard: if RR version == IA version, it forces read‑only. If they’re different, it falls back to the existing logic exactly as before.
+- The new wires only read records; they don’t change data.
+
+So behavior outside Reprogramming Request stays the same, and inside RR it just adds the extra “equal version = read‑only” rule you asked for.
+
+If you want, I can add a debug `console.log` so you can verify which path is taken without changing logic.
+
+---
+
+
+**User**
+
+for the uNI_BudgetData lwc i mean, you are not breaking the preexisting logic right?
+
+---
+
+
+**OpenAI Codex**
+
+Yes — for `uNI_BudgetData` the existing logic is preserved. The only added behavior is an extra **read‑only guard when the component is on uNI_ReprogrammingRequest__c and RR version == IA version**. In all other cases, it still uses the original draft/submitted + versionAhead logic exactly as before.
+
+---
