@@ -118,7 +118,19 @@ export default class LogframeManagement extends LightningElement {
             : (this.latestVersion || '');
         const haveBoth = !!this.liveVersion && !!viewedVersion;
         const viewingNonLive = haveBoth && (this.liveVersion !== viewedVersion);
-        return serverSays || viewingNonLive;
+        const baseEditable = serverSays || viewingNonLive;
+
+        // In Reprogramming Request context, block edits if RR version == IA live version
+        if (this.contextObjectApiName === 'uNI_ReprogrammingRequest__c') {
+            if (this.iaDefaultLoaded && this.rrDefaultLoaded) {
+                const ia = this._normalizeVersion(this.liveVersion);
+                const rr = this._normalizeVersion(this.rrDefaultVersion);
+                if (ia && rr && ia === rr) {
+                    return false;
+                }
+            }
+        }
+        return baseEditable;
     }
 
     get isButtonDisabled() {
@@ -363,6 +375,11 @@ export default class LogframeManagement extends LightningElement {
             }
             return;
         }
+    }
+
+    _normalizeVersion(val) {
+        if (val === null || val === undefined) return '';
+        return String(val).trim();
     }
 
     appendColumns(columnCount) {

@@ -878,3 +878,26 @@ Please confirm:
 Once you confirm, I’ll start with the logframe component.
 
 ---
+
+
+**User**
+
+1. yes 
+2. existing logic
+3. yes
+
+---
+
+
+**OpenAI Codex**
+
+I’ve updated **only** `uNI_LogframeVersions` (as requested “start with logframe”) to block edits in **Reprogramming Request** context when IA version == RR version, while leaving the existing “draft/version” logic intact.
+
+Changes made:
+- File: `force-app/main/default/lwc/uNI_LogframeVersions/uNI_LogframeVersions.js`
+- Added a context guard inside `canEdit` using `uNI_ReprogrammingObjectCheck` context + IA/RR version comparison.
+- Existing logic for draft/version stays untouched.
+
+Please confirm this looks right and I’ll proceed to the next child LWC (uNI_FERatesv, then uNI_BudgetOverview, uNI_BudgetData, uNI_CoFunding, uNI_StaffAllocations) one by one.
+
+---
