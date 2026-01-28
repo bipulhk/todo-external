@@ -73,6 +73,39 @@ public with sharing class uNI_CloneLogframe {
         return f.getDescribe().isUpdateable();
     }
 
+    private static Object computeNextVersionValue(Object current, Schema.SObjectField fld){
+        Schema.DescribeFieldResult d = fld.getDescribe();
+        Schema.DisplayType t = d.getType();
+        Integer base;
+        try { base = (current == null) ? 0 : Integer.valueOf(String.valueOf(current)); }
+        catch (Exception e) { base = 0; }
+        Integer next = base + 1;
+        if (t == Schema.DisplayType.Integer || t == Schema.DisplayType.Long) {
+            return next;
+        } else if (t == Schema.DisplayType.Double ||
+                   t == Schema.DisplayType.Percent ||
+                   t == Schema.DisplayType.Currency) {
+            return Decimal.valueOf(next);
+        }
+        return String.valueOf(next);
+    }
+
+    private static uNI_Logframe__c findExistingLogframe(Id indAppId, Object targetVersion){
+        if (indAppId == null || targetVersion == null) {
+            return null;
+        }
+        // uNI_LogframeVersion__c is a Text field in this org, so bind as String
+        String v = String.valueOf(targetVersion);
+        List<uNI_Logframe__c> rows = [
+            SELECT Id, uNI_LogframeVersion__c
+            FROM uNI_Logframe__c
+            WHERE uNI_Individual_Application__c = :indAppId
+              AND uNI_LogframeVersion__c = :v
+            LIMIT 1
+        ];
+        return rows.isEmpty() ? null : rows[0];
+    }
+
     // ---------- Core ----------
     private static Response cloneAll(Request req){
         Response res = new Response();
@@ -94,6 +127,24 @@ public with sharing class uNI_CloneLogframe {
                 WHERE Id = :req.logframeId
                 LIMIT 1
             ];
+
+            // Guard: if the target version already exists, skip cloning
+            Object targetVersionValue = computeNextVersionValue(
+                srcLF.get(uNI_Logframe__c.uNI_LogframeVersion__c),
+                uNI_Logframe__c.uNI_LogframeVersion__c
+            );
+            uNI_Logframe__c existing = findExistingLogframe(
+                srcLF.uNI_Individual_Application__c,
+                targetVersionValue
+            );
+            if (existing != null) {
+                res.newLogframeId = existing.Id;
+                res.outcomesCloned = 0;
+                res.outputsCloned = 0;
+                res.indicatorsCloned = 0;
+                return res;
+            }
+
             uNI_Logframe__c newLF = srcLF.clone(false,false,false);
             bumpVersion(newLF, uNI_Logframe__c.uNI_LogframeVersion__c);   // v = old + 1 on the NEW logframe
 

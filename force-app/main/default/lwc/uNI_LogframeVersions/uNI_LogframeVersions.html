@@ -1,0 +1,202 @@
+<template>
+    <lightning-card title="">
+        <!-- ===== Version Picker Row ===== -->
+        <div class="slds-grid slds-wrap slds-p-around_small">
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                <lightning-combobox name="logframeVersion" label="Logframe version" value={selectedVersion}
+                    placeholder="Select a version" options={versionOptions} onchange={handleVersionChange}>
+                </lightning-combobox>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-top_x-large">
+                <!-- Optional helper text / status display -->
+                <p class="slds-text-color_weak slds-m-top_xxx-small">
+                    Viewing: <strong>{displayVersion}</strong>
+                </p>
+
+            </div>
+        </div>
+
+       
+
+        <div class="slds-m-around_medium">
+            <lightning-button label="Add Outcome" onclick={handleAddOutcome} disabled={isButtonDisabled}>
+            </lightning-button>
+            <br />
+
+            <template for:each={outcomes} for:item="outcome">
+                <div key={outcome.Id} class="slds-var-m-bottom_medium">
+                    <div class="slds-grid slds-grid_align-spread">
+                        <div class="section-header" style="width:50%">
+                            <h2 style="background-color: #212E92; padding: 1px; color: white; border-radius:6px">
+                                {outcome.uNI_OutcomeTitle__c}
+                            </h2>
+                        </div>
+                        <div>
+                            <lightning-button label="Rename Outcome" data-id={outcome.Id} onclick={handleOpenModal}
+                                icon-name="utility:edit" icon-position="left" variant="brand-outline"
+                                disabled={isButtonDisabled}>
+                            </lightning-button>
+
+                            <lightning-button label="Delete Outcome" data-id={outcome.Id} onclick={handleDeleteOutcome}
+                                icon-name="utility:delete" icon-position="left" variant="brand-outline"
+                                disabled={isButtonDisabled}>
+                            </lightning-button>
+
+                            <lightning-button label="Add Indicator" data-id={outcome.Id}
+                                onclick={handleAddOutcomeIndicator} disabled={isButtonDisabled}>
+                            </lightning-button>
+                        </div>
+                    </div>
+
+                    <!-- Outcome Indicators -->
+                    <!-- <lightning-datatable data-id={outcome.Id} key-field="Id" data={outcome.Indicators__r}
+                        columns={indicatorColumns} onsave={handleSave} draft-values={draftValues}
+                        data-table-id={outcome.Id} hide-checkbox-column onrowaction={handleRowAction}>
+                    </lightning-datatable> -->
+                    <lightning-datatable data-id={outcome.Id} key-field="Id" data={outcome.Indicators__r}
+                        columns={indicatorColumns} onsave={handleSave} draft-values={draftValues}
+                        hide-checkbox-column="false" data-table-id={outcome.Id} onrowaction={handleRowAction}
+                        onrowselection={handleRowSelection}>
+                    </lightning-datatable>
+                </div>
+            </template>
+
+            <!-- Outcome Rename Modal -->
+            <template if:true={isModalOpen}>
+                <section class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container">
+                        <header class="slds-modal__header">
+                            <button
+                                class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                                title="Close"
+                                onclick={handleCloseModal}>
+                                <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                                <span class="slds-assistive-text">Close</span>
+                            </button>
+                            <h2 class="slds-text-heading_medium">Enter the title of outcome</h2>
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium">
+                            <lightning-input label="Title" onchange={handleOutcomeTitleChange}
+                                value={outcomeTitleChange}>
+                            </lightning-input>
+                        </div>
+                        <footer class="slds-modal__footer">
+                            <lightning-button variant="neutral" label="Cancel" onclick={handleCloseModal}>
+                            </lightning-button>
+                            <lightning-button variant="brand" label="Save" onclick={handleSaveOutcome}>
+                            </lightning-button>
+                        </footer>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+
+            <!-- Subindicator Modal -->
+            <template if:true={isModalSubindicatorOpen}>
+                <section class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container">
+                        <header class="slds-modal__header">
+                            <button
+                                class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                                title="Close"
+                                onclick={handleCloseModal}>
+                                <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                                <span class="slds-assistive-text">Close</span>
+                            </button>
+                            <h2 class="slds-text-heading_medium">Enter a disaggregation value for this indicator</h2>
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium">
+                            <lightning-input label="Disaggregation" onchange={handleDisaggregationChange}
+                                value={disaggregationChange}>
+                            </lightning-input>
+                        </div>
+                        <footer class="slds-modal__footer">
+                            <lightning-button variant="neutral" label="Cancel" onclick={handleCloseModal}>
+                            </lightning-button>
+                            <lightning-button variant="brand" label="Save" onclick={addSubIndicator}></lightning-button>
+                        </footer>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+
+            <br /><br />
+
+            <lightning-button label="Add Output" onclick={handleAddOutput} disabled={isButtonDisabled}>
+            </lightning-button>
+            <br />
+
+            <template for:each={outputs} for:item="output">
+                <div key={output.Id} class="slds-var-m-bottom_medium">
+                    <div class="slds-grid slds-grid_align-spread">
+                        <div class="section-header" style="width:50%">
+                            <h2 style="background-color: #212E92; padding: 1px; color: white; border-radius:6px">
+                                {output.uNI_OutputTitle__c}
+                            </h2>
+                        </div>
+                        <div>
+                            <lightning-button label="Rename Output" data-id={output.Id} onclick={handleOpenModalOutput}
+                                icon-name="utility:edit" icon-position="left" variant="brand-outline"
+                                disabled={isButtonDisabled}>
+                            </lightning-button>
+
+                            <lightning-button label="Delete Output" data-id={output.Id} onclick={handleDeleteOutput}
+                                icon-name="utility:delete" icon-position="left" variant="brand-outline"
+                                disabled={isButtonDisabled}>
+                            </lightning-button>
+
+                            <lightning-button label="Add Indicator" data-id={output.Id}
+                                onclick={handleAddOutputIndicator} disabled={isButtonDisabled}>
+                            </lightning-button>
+
+                           
+                        </div>
+                    </div>
+
+                    <!-- Output Indicators -->
+                    <lightning-datatable data-id={output.Id} key-field="Id" data={output.Indicators__r}
+                        columns={indicatorColumns} onsave={handleSaveOutputIndicators}
+                        draft-values={draftValuesOutputInd} data-table-id={output.Id} hide-checkbox-column
+                        onrowaction={handleRowAction2}>
+                    </lightning-datatable>
+
+                    <!-- Output Milestones -->
+                   
+                </div>
+            </template>
+
+            <!-- Output Rename Modal -->
+            <template if:true={isModalOutputOpen}>
+                <section class="slds-modal slds-fade-in-open">
+                    <div class="slds-modal__container">
+                        <header class="slds-modal__header">
+                            <button
+                                class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                                title="Close"
+                                onclick={handleCloseModal}>
+                                <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                                <span class="slds-assistive-text">Close</span>
+                            </button>
+                            <h2 class="slds-text-heading_medium">Enter the title of output</h2>
+                        </header>
+                        <div class="slds-modal__content slds-p-around_medium">
+                            <lightning-input label="Title" onchange={handleOutputTitleChange} value={outputTitleChange}>
+                            </lightning-input>
+                        </div>
+                        <footer class="slds-modal__footer">
+                            <lightning-button variant="neutral" label="Cancel" onclick={handleCloseModal}>
+                            </lightning-button>
+                            <lightning-button variant="brand" label="Save" onclick={handleSaveOutput}>
+                            </lightning-button>
+                        </footer>
+                    </div>
+                </section>
+                <div class="slds-backdrop slds-backdrop_open"></div>
+            </template>
+
+            <br />
+            <lightning-button label="Save Logframe as Final" onclick={handleMakeReadOnly} disabled={isButtonDisabled}>
+            </lightning-button>
+        </div>
+    </lightning-card>
+</template>

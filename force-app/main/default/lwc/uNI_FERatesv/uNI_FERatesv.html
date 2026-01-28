@@ -1,0 +1,107 @@
+<template>
+    <lightning-card title="Foreign Exchange Rates">
+        <div class="slds-m-horizontal_small slds-m-top_small" slot="actions">
+            <lightning-button
+                label="New"
+                variant="brand"
+                onclick={handleNew}
+                class="slds-m-right_x-small"
+            ></lightning-button>
+            <lightning-button
+                label="Refresh"
+                variant="neutral"
+                onclick={handleRefresh}
+            ></lightning-button>
+        </div>
+
+        <div class="slds-p-horizontal_small slds-p-bottom_small">
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </template>
+
+            <template if:true={data}>
+                <lightning-datatable
+                    key-field="Id"
+                    data={data}
+                    columns={columns}
+                    hide-checkbox-column
+                    onrowaction={handleRowAction}
+                >
+                </lightning-datatable>
+
+                <template if:false={rowCount}>
+                    <p class="slds-text-body_small slds-m-top_small">
+                        No Foreign Exchange Rates found for this record.
+                    </p>
+                </template>
+            </template>
+
+            <template if:true={error}>
+                <!-- Optional custom error component -->
+                <!-- <c-error-panel errors={error}></c-error-panel> -->
+            </template>
+        </div>
+    </lightning-card>
+
+    <!-- NEW: Create modal (no navigation) -->
+    <template if:true={showNewModal}>
+        <section
+            role="dialog"
+            tabindex="-1"
+            aria-modal="true"
+            class="slds-modal slds-fade-in-open"
+        >
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <h2 class="slds-text-heading_medium">New Foreign Exchange Rate</h2>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-record-edit-form
+                        object-api-name="uNI_ForeignExchangeRates__c"
+                        onsuccess={handleNewSuccess}
+                        onerror={handleNewError}
+                    >
+                        <!-- Set required defaults without showing them -->
+                        <lightning-input-field
+                            field-name="uNI_IndividualApplication__c"
+                            value={recordId}
+                            class="slds-hide"
+                        ></lightning-input-field>
+
+                        <template if:true={version}>
+                            <lightning-input-field
+                                field-name="uNI_Version__c"
+                                value={version}
+                                class="slds-hide"
+                            ></lightning-input-field>
+                        </template>
+
+                        <!-- Visible fields to fill -->
+                        <lightning-input-field field-name="Name"></lightning-input-field>
+                        <lightning-input-field field-name="uNI_PartnerOrganization__c"></lightning-input-field>
+                        <lightning-input-field field-name="uNI_Country__c"></lightning-input-field>
+                        <lightning-input-field field-name="uNI_LocalCurrency__c"></lightning-input-field>
+                        <lightning-input-field field-name="uNI_ForexInUS__c"></lightning-input-field>
+                        <lightning-input-field field-name="uNI_Source__c"></lightning-input-field>
+
+                        <div class="slds-m-top_medium slds-text-align_right">
+                            <lightning-button
+                                label="Cancel"
+                                onclick={handleCloseNewModal}
+                            ></lightning-button>
+                            <lightning-button
+                                class="slds-m-left_small"
+                                type="submit"
+                                variant="brand"
+                                label="Save"
+                            ></lightning-button>
+                        </div>
+                    </lightning-record-edit-form>
+                </div>
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

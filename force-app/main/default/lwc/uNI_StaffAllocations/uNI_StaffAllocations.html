@@ -1,0 +1,163 @@
+<template>
+    <lightning-card>
+        <div class="slds-p-around_medium table-wrapper">
+            <h1>IA id : {recordId}, passed version : {version}</h1>
+            <template if:true={columnsReady}>
+                <div class="slds-scrollable_x">
+                    <table class="slds-table slds-table_cell-buffer slds-table_bordered dynamic-table">
+                        <thead>
+                            <tr>
+                                <th class="sticky-col"></th>
+                                <th class="sticky-col"></th>
+
+                                <template for:each={baseColumns2} for:item="col">
+                                    <th  key={col}></th>
+                                </template>
+                                <template for:each={yearGroups} for:item="yearBlock">
+                                 <th  key={yearBlock.id} colspan="4" style="text-align:center;border: 1px solid #d8dde6;">{yearBlock.year}</th>
+
+                                </template>
+
+                                <template for:each={summaryColumns} for:item="col">
+                                    <th key={col}></th>
+                                </template>
+                            </tr>
+                            <tr>
+                                <th class="sticky-col">Output</th>
+                                <th class="sticky-col">Expense Type</th>
+
+                                <template for:each={baseColumns2} for:item="col">
+                                    <th key={col}>{col}</th>
+                                </template>
+
+                                <template for:each={yearGroups} for:item="yearBlock">
+                                    <th key={yearBlock.id} style="border-left: 1px solid #d8dde6;">LOE %</th>
+                                    <th key={yearBlock.id}># Month</th>
+                                    <th key={yearBlock.id}>Fully Loaded Salary</th>
+                                    <th key={yearBlock.id} style="border-right: 1px solid #d8dde6;">{yearBlock.label}</th>
+                                </template>
+
+                                <template for:each={summaryColumns} for:item="col">
+                                    <th key={col}>{col}</th>
+                                </template>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <template for:each={tableData} for:item="row" for:index="index">
+                                <tr key={row.id}>
+                                    <!-- Output -->
+                                    <td class="sticky-col" style="left:0px;">
+                                        <lightning-combobox value={row.output} data-index={index} data-field="output"
+                                            options={outputOptions} onchange={handleFieldChange} disabled={isReadOnly}>
+                                        </lightning-combobox>
+                                    </td>
+
+                                    <!-- Expense Type -->
+                                    <td class="sticky-col">
+                                        <lightning-combobox value={row.expenseType} data-index={index}
+                                            data-field="expenseType" options={expenseTypeOptions}
+                                            onchange={handleFieldChange} disabled={isReadOnly}>
+                                        </lightning-combobox>
+                                    </td>
+
+                                    <!-- Position Title -->
+                                    <td>
+                                        <lightning-input value={row.positionTitle} data-index={index}
+                                            data-field="positionTitle" onchange={handleFieldChange}
+                                            disabled={isReadOnly}>
+                                        </lightning-input>
+                                    </td>
+
+                                    <!-- Country -->
+                                    <td>
+                                        <lightning-input value={row.country} data-index={index} data-field="country"
+                                            onchange={handleFieldChange} disabled={isReadOnly}>
+                                        </lightning-input>
+                                    </td>
+
+                                    <!-- Employing Org -->
+                                    <td>
+                                        <lightning-input value={row.employingOrg} data-index={index}
+                                            data-field="employingOrg" onchange={handleFieldChange}
+                                            disabled={isReadOnly}>
+                                        </lightning-input>
+                                    </td>
+
+                                    <!-- Year columns -->
+                                    <template for:each={row.yearGroups} for:item="yearGroup">
+                                        <td key={yearGroup.id}>
+                                            <div style="width:60px">
+                                                <lightning-input type="number" value={yearGroup.LOE} data-index={index}
+                                                    data-year-id={yearGroup.id} data-field="LOE"
+                                                    formatter="percent-fixed" step="1" onchange={handleYearChange}
+                                                    class="loe-input custom-width" suffix="%"
+                                                    disabled={isReadOnly}>
+                                                </lightning-input>
+                                            </div>
+                                        </td>
+                                        <td key={yearGroup.id}>
+                                            <lightning-input type="number" step="1" value={yearGroup.Month}
+                                                data-index={index} data-year-id={yearGroup.id} data-field="Month"
+                                                onchange={handleYearChange} disabled={isReadOnly}>
+                                            </lightning-input>
+                                        </td>
+                                        <td key={yearGroup.id}>
+                                            <lightning-input value={yearGroup.Salary} data-index={index}
+                                                data-year-id={yearGroup.id} data-field="Salary"
+                                                onchange={handleYearChange} disabled={isReadOnly}>
+                                            </lightning-input>
+                                        </td>
+                                        <td key={yearGroup.id}>
+                                            <lightning-input type="number" value={yearGroup.YearLabel}
+                                                data-index={index} data-year-id={yearGroup.id} data-field="YearLabel"
+                                                onchange={handleYearChange} disabled={isReadOnly}>
+                                            </lightning-input>
+                                        </td>
+                                    </template>
+
+                                    <!-- Summary -->
+                                    <td>
+                                        <div style="width:60px">
+                                            <lightning-input type="number" value={row.LOESumm} formatter="percent-fixed"
+                                                disabled suffix="%"></lightning-input>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <lightning-input type="number" value={row.salSumm} disabled></lightning-input>
+                                    </td>
+                                    <td><div style="width:150px">
+                                        <lightning-input type="number" value={row.costPerLOE} disabled>
+                                        </lightning-input>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <lightning-input type="text" value={row.allocatedPer} data-index={index}
+                                            data-field="allocatedPer" onchange={handleFieldChange}
+                                            disabled={isReadOnly}>
+                                        </lightning-input>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table> </br></br></br>
+                </div>
+
+                <!-- Buttons -->
+                <template if:true={showActionButtons}>
+                    <div class="slds-m-top_medium">
+                        <lightning-button label="Add Row" onclick={addRow}></lightning-button>
+                        <lightning-button class="slds-m-left_small" label="Save" variant="brand" onclick={handleSave}>
+                        </lightning-button>
+                        <lightning-button class="slds-m-left_small" label="Submit" variant="destructive"
+                            onclick={handleSubmit}></lightning-button>
+                    </div>
+                </template>
+            </template>
+
+            <template if:false={columnsReady}>
+                <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+            </template>
+        </div>
+    </lightning-card>
+</template>

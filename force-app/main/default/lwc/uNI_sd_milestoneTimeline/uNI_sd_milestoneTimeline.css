@@ -1,0 +1,35 @@
+/* pink highlight for whole row if you ever apply the class directly */
+.behind {
+    background-color: #ffb7c5 !important;
+}
+
+.summary-label {
+    font-weight: 600;
+    color: #54698d;
+    margin-bottom: 0.1rem;
+} .summary-header {
+    background-color: #b2d1ff;
+    color: #000;
+    font-weight: bold;
+    padding: 8px;
+    border: 1px solid #000;
+}
+
+.summary-data {
+    padding: 8px;
+    border: 1px solid #000;
+    min-height: 40px; /* prevents collapsing when blank */
+}
+
+.full-width-header {
+    font-weight: bold;
+    padding: 8px;
+    border: 1px solid #000;
+}
+.group-header {
+    background-color: #212E92;
+    padding: 4px 8px;
+    color: white;
+    border-radius: 6px;
+    font-weight: bold;
+}

@@ -850,6 +850,7 @@ export default class BudgetTable extends LightningElement {
         }
         try {
             console.log('original and custom ablel'+ this.customLabelStr+'@'+this.originalLabelStr);
+            // Persist selected columns to uNI_BudgetDataColumns__c (multi-select stored as ';' delimited string).
             await saveSelectedColumns({ parentId: this.recordId, selectedColumns: this.selectedColumns,customOriginalLabels: this.originalLabelStr, customUpdatedLabels: this.customLabelStr });
             console.log('ehjbjh'+this.selectedColumns);
             this.showTable = true;

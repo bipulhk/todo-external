@@ -1,0 +1,93 @@
+<template>
+    <lightning-card title="Milestone Timeline (Year View)">
+        <!-- SUMMARY + VERSION ROW -->
+        <div class="slds-p-horizontal_medium slds-p-vertical_small">
+            <div class="slds-grid slds-wrap slds-grid_vertical-align-center">
+                <!-- Version picklist -->
+
+
+               
+
+
+
+
+                <!-- Submit button -->
+
+            </div>
+            <lightning-layout class="slds-var-m-vertical_medium" vertical-align="end">
+                <template if:true={showVersionPicker}>
+                    <lightning-layout-item size="3">
+                        <lightning-combobox name="version" label="Logframe Version" options={versionOptions}
+                            value={activeVersion} onchange={onVersionChange} disabled={loading}>
+                        </lightning-combobox>
+                    </lightning-layout-item>
+                </template>
+
+                <lightning-layout-item class="slds-m-left_small">
+                    <lightning-button label="Submit Milestones" variant="brand" onclick={handleSubmitMilestones}
+                        disabled={addDisabled}></lightning-button>
+
+                </lightning-layout-item>
+            </lightning-layout>
+        </div>
+
+        <hr />
+
+        <!-- YEAR GROUPS -->
+        <template if:true={yearGroupings}>
+            <template for:each={yearGroupings} for:item="yearGroup">
+                <div key={yearGroup.year} class="slds-m-horizontal_medium slds-m-bottom_large">
+                    <!-- Year header -->
+                    <div class="group-header slds-m-bottom_x-small">
+                        {yearGroup.yearLabel}
+                    </div>
+
+                    <!-- Datatable per year -->
+                    <template if:true={yearGroup.milestones.length}>
+                        <lightning-datatable key-field="Id" data={yearGroup.milestones} columns={columns}
+                            hide-checkbox-column draft-values={draftValues} onsave={handleSave} oncancel={handleCancel}
+                            onrowaction={handleRowAction}>
+                        </lightning-datatable>
+                    </template>
+
+                    <template if:false={yearGroup.milestones.length}>
+                        <div class="slds-text-color_weak slds-box slds-box_x-small">
+                            No milestones for this year.
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </template>
+
+        <!-- LOADING SPINNER -->
+        <template if:true={loading}>
+            <div class="slds-p-vertical_medium">
+                <lightning-spinner alternative-text="Loading..." size="small"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- STATUS MODAL -->
+        <template if:true={showStatusModal}>
+            <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <h2 class="slds-text-heading_medium">Update Status</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <lightning-combobox name="status" label="Status" value={statusCurrentValue}
+                            options={statusOptions} onchange={handleStatusChange}>
+                        </lightning-combobox>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button variant="neutral" label="Cancel" onclick={closeStatusModal}>
+                        </lightning-button>
+                        <lightning-button variant="brand" label="Save" class="slds-m-left_small"
+                            onclick={handleStatusSave}>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </lightning-card>
+</template>

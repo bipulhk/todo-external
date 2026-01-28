@@ -57,6 +57,40 @@ public with sharing class uNI_CloneBudgetData {
         Map<Id, Id> summaryBudgetMap = new Map<Id, Id>();
     }
 
+    private static Object normalizeVersionValue(String version, Schema.SObjectField fld) {
+        if (String.isBlank(version)) {
+            return null;
+        }
+        Schema.DescribeFieldResult describe = fld.getDescribe();
+        Schema.DisplayType type = describe.getType();
+        String value = version.trim();
+        try {
+            if (type == Schema.DisplayType.Integer || type == Schema.DisplayType.Long) {
+                return Integer.valueOf(value);
+            } else if (type == Schema.DisplayType.Double ||
+                       type == Schema.DisplayType.Percent ||
+                       type == Schema.DisplayType.Currency) {
+                return Decimal.valueOf(value);
+            }
+        } catch (Exception e) {
+            // fall through and return as string
+        }
+        return value;
+    }
+
+    private static Boolean hasTargetVersionRecords(String objectApiName, Id indAppId, Object versionValue) {
+        if (indAppId == null || versionValue == null) {
+            return false;
+        }
+        String soql =
+            'SELECT Id FROM ' + objectApiName +
+            ' WHERE uNI_IndividualApplication__c = :indAppId' +
+            ' AND uNI_Version__c = :versionValue' +
+            ' LIMIT 1';
+        List<SObject> rows = Database.query(soql);
+        return !rows.isEmpty();
+    }
+
     // ===== Core logic per request =====
     private static Response cloneForRequest(Request req) {
         Response res = new Response();
@@ -98,6 +132,12 @@ public with sharing class uNI_CloneBudgetData {
     // ----- Object specific cloning -----
     private static Map<Id, Id> cloneSummaryBudgets(Request req, String sourceVersion, Response res) {
         Map<Id, Id> idMap = new Map<Id, Id>();
+
+        Object targetVersionValue =
+            normalizeVersionValue(req.targetVersion, uNI_SummaryBudget__c.uNI_Version__c);
+        if (hasTargetVersionRecords('uNI_SummaryBudget__c', req.individualApplicationId, targetVersionValue)) {
+            return idMap;
+        }
 
         List<uNI_SummaryBudget__c> src = [
             SELECT Id,
@@ -161,6 +201,12 @@ public with sharing class uNI_CloneBudgetData {
     private static Integer cloneExpenseTypes(Request req, String sourceVersion, Response res) {
         Integer count = 0;
 
+        Object targetVersionValue =
+            normalizeVersionValue(req.targetVersion, uNI_Expense_Types__c.uNI_Version__c);
+        if (hasTargetVersionRecords('uNI_Expense_Types__c', req.individualApplicationId, targetVersionValue)) {
+            return count;
+        }
+
         List<uNI_Expense_Types__c> src = [
             SELECT Id,
                    Name,
@@ -223,6 +269,13 @@ public with sharing class uNI_CloneBudgetData {
                                            CloneContext ctx,
                                            Response res) {
         Integer count = 0;
+
+        Object targetVersionValue =
+            normalizeVersionValue(req.targetVersion, uNI_BudgetData__c.uNI_Version__c);
+        if (hasTargetVersionRecords('uNI_SummaryBudget__c', req.individualApplicationId, targetVersionValue) ||
+            hasTargetVersionRecords('uNI_BudgetData__c', req.individualApplicationId, targetVersionValue)) {
+            return count;
+        }
 
         List<uNI_BudgetData__c> src = [
             SELECT Id,

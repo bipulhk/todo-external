@@ -1,0 +1,28 @@
+.datatable-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.lightning-datatable {
+    width: 100%;
+}
+
+.summary-header {
+    background-color: #b2d1ff; /* Your chosen light blue color */
+    color: #000;              /* Black text for readability */
+    font-weight: bold;         /* The bold text you wanted */
+    padding: 8px;              /* Standard SLDS padding */
+    border: 1px solid #D3D3D3; /* Standard SLDS border */
+}
+
+.summary-data {
+    padding: 8px;              /* Standard SLDS padding */
+    border: 1px solid #D3D3D3; /* Standard SLDS border */
+    min-height: 40px;          /* Ensures consistent row height */
+}
+
+.full-width-header {
+    font-weight: bold;
+    padding: 8px;
+    border: 1px solid #D3D3D3;
+}

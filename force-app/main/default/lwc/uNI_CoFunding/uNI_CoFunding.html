@@ -1,0 +1,71 @@
+<template>
+    <lightning-card title="Co-Funding Details">
+        <div class="slds-p-around_medium">
+            <!-- <h1>IA id {recordId}, Version passed : {version}</h1> -->
+            <template if:true={showSaveButton}>
+                <lightning-button label="Save" onclick={saveRecords} variant="brand"
+                    class="slds-m-bottom_small">
+                </lightning-button>
+            </template>
+
+            <!-- Table -->
+            <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                <thead>
+                    <tr>
+                        <th>Sources of co-funding</th>
+                        <th>In-kinds</th>
+                        <th>Cash</th>
+                        <th>Total</th>
+                        <th>Comments</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={rows} for:item="row" for:index="index">
+                        <tr key={row.id}>
+                            <td>
+                                <lightning-input value={row.source} data-index={index} onchange={handleChange}
+                                    data-field="source" disabled={isReadOnly}>
+                                </lightning-input>
+                            </td>
+                            <td>
+                                <lightning-input type="number" formatter="currency" step="0.01" value={row.inKind}
+                                    data-index={index} onchange={handleChange} data-field="inKind"
+                                    disabled={isReadOnly}>
+                                </lightning-input>
+                            </td>
+                            <td>
+                                <lightning-input type="number" formatter="currency" step="0.01" value={row.cash}
+                                    data-index={index} onchange={handleChange} data-field="cash"
+                                    disabled={isReadOnly}>
+                                </lightning-input>
+                            </td>
+                            <td>
+                                <lightning-input type="number" formatter="currency" value={row.total} disabled>
+                                </lightning-input>
+                            </td>
+                            <td>
+                                <lightning-input value={row.comments} data-index={index} onchange={handleChange}
+                                    data-field="comments" disabled={isReadOnly}>
+                                </lightning-input>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr class="slds-theme_shade">
+                        <td><strong>Total</strong></td>
+                        <td><strong><lightning-input 
+                                    type="number"  formatter="currency"
+                                    value={totalRow.inKind} disabled></lightning-input></strong></td>
+                        <td><strong><lightning-input 
+                                    type="number"  formatter="currency" 
+                                    value={totalRow.cash} disabled></lightning-input></strong></td>
+                        <td><strong><lightning-input 
+                                    type="number"  formatter="currency" 
+                                    value={totalRow.total} disabled></lightning-input></strong></td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </lightning-card>
+</template>

@@ -15,7 +15,7 @@ public without sharing class uNI_BudgetDataController {
             LIMIT 1
         ];
 
-        // Read Budget_Data_Columns__c (multi-select stored there)
+        // Read Budget_Data_Columns__c (multi-select stored on uNI_BudgetDataColumns__c for this IA)
         List<uNI_BudgetDataColumns__c> bdColumns = [
             SELECT Id, uNI_Budget_Data_Columns__c,uNI_Custom_Columns_Original_Labels__c,uNI_Custom_Columns_Updated_Labels__c 
             FROM uNI_BudgetDataColumns__c
@@ -23,7 +23,7 @@ public without sharing class uNI_BudgetDataController {
               AND is_Active__c = true
         ];
 
-        // Build selectedColumns from stored multi-select
+        // Build selectedColumns from stored multi-select (semicolon-delimited string)
         List<String> selectedColumns = new List<String>();
         if (bdColumns != null && !bdColumns.isEmpty() && bdColumns[0].uNI_Budget_Data_Columns__c != null) {
             selectedColumns = new List<String>(
@@ -90,6 +90,7 @@ public without sharing class uNI_BudgetDataController {
             System.debug('@@seleColumss ' + selectedColumns);
         }
         result.put('allowedBudget', app.uNI_ApprovedFundingCieling__c);
+        // Return selected columns to LWC so it can show/hide table columns.
         result.put('selectedColumns', selectedColumns);
         result.put('showTable', selectedColumns.size() > 0);
 
@@ -752,7 +753,7 @@ public without sharing class uNI_BudgetDataController {
     }
 
     // -------------------------------------------------------------------------
-    // SAVE SELECTED COLUMNS (V2) – unchanged
+        // SAVE SELECTED COLUMNS (V2)
     // -------------------------------------------------------------------------
     @AuraEnabled
     public static void saveSelectedColumnsV2(Id parentId, List<String> selectedColumns,string customOriginalLabels, string customUpdatedLabels) {
@@ -784,6 +785,7 @@ public without sharing class uNI_BudgetDataController {
             valueToSet = String.join(selectedColumns, ';');
         }
 
+        // Persist selected columns on uNI_BudgetDataColumns__c so future loads reuse the same column set.
         uNI_BudgetDataColumns__c bdColumn = new uNI_BudgetDataColumns__c(
             uNI_Investments__c = parentId,
             uNI_Budget_Data_Columns__c = valueToSet,

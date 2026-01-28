@@ -1,0 +1,9 @@
+.table-wrapper .slds-scrollable_x {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 500px; /* adjust as needed */
+}
+.custom-width .slds-input {
+    width: 120px !important;
+    min-width: 120px;
+}
