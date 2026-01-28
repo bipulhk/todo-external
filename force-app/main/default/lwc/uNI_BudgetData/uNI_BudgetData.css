@@ -1,0 +1,31 @@
+.scroll-container {
+    overflow-x: auto;
+    overflow-y: visible;
+    white-space: nowrap;
+}
+.right-align lightning-input,
+.right-align input {
+    text-align: right;
+}
+
+
+.slds-table {
+    overflow: visible;
+}
+
+::part(option)[disabled] {
+    color: gray !important;
+    opacity: 0.6;
+}
+
+.slds-table th,
+.slds-table td {
+    min-width: 180px;
+    vertical-align: middle;
+}
+
+/* Expense Type column wider */
+.slds-table td:nth-child(8),
+.slds-table th:nth-child(8) {
+    min-width: 320px;
+}

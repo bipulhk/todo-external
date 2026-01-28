@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>uNI_Logframe__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Logframe</label>
+    <referenceTo>uNI_Logframe__c</referenceTo>
+    <relationshipLabel>Portfolio Outputs</relationshipLabel>
+    <relationshipName>Portfolio_Outputs</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

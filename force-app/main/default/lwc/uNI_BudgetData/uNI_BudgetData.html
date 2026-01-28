@@ -1,0 +1,514 @@
+<template>
+    <div class="container slds-p-around_medium">
+        <template if:false={showTable}>
+            <lightning-card title="Select columns to include in Budget Table">
+                <!-- 🔹 Right top rename button -->
+                <div class="slds-grid slds-grid_align-end slds-p-horizontal_medium slds-p-top_small">
+                    <lightning-button label="Rename Column Labels" variant="neutral" onclick={openRenameModal}>
+                    </lightning-button>
+                </div>
+
+                <div class="slds-p-around_medium">
+                    <p class="slds-text-body_regular slds-m-bottom_small">
+                        Choose the columns you want to show in the budget table. Default columns (Outputs, Organization,
+                        Country etc) will always be present.
+                    </p>
+
+                    <lightning-dual-listbox name="groupedDual" label="Select Root Groups" source-label="Available"
+                        selected-label="Selected" options={groupedOptions} value={selectedColumns}
+                        onchange={handleChange}>
+                    </lightning-dual-listbox>
+
+                    <div class="slds-m-top_medium">
+                        <lightning-button label="Finalize Budget Table" variant="brand" onclick={handleGenerateTable}>
+                        </lightning-button>
+                    </div>
+                </div>
+            </lightning-card>
+        </template>
+
+        <!-- 🔹 Rename Modal -->
+        <template if:true={showRenameModal}>
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <h2 class="slds-text-heading_medium">Rename Custom Column Labels</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <template for:each={customColumns} for:item="col">
+                            <div key={col.name} class="slds-m-bottom_small">
+                                <lightning-input label={col.name} data-name={col.name} value={col.newLabel}
+                                    onchange={handleLabelChange}>
+                                </lightning-input>
+                            </div>
+                        </template>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button label="Cancel" onclick={closeRenameModal}></lightning-button>
+                        <lightning-button class="slds-m-left_small" variant="brand" label="Save"
+                            onclick={saveRenamedLabels}>
+                        </lightning-button>
+
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+        <template if:true={submitPop}>
+            <div class="slds-modal__container slds-table_bordered" >
+                    <header class="slds-modal__header">
+                        <h2><b>Proceed to Save Budget as Final</b></h2>
+                        </br>
+                        <h2>By choosing this option, you are Submitting the Budget information, once submitted user couldn't edit it again. Only way is to raise a Reprogramming Request”. If you
+                            prefer to have it returned to you for review after the changes are made, click “Cancel” and
+                            choose the “Save Draft” option instead.</b></h2>
+                    </header>
+                    <footer class="slds-modal__footer">
+                        <lightning-button variant="neutral" label="Cancel" onclick={closeModal}></lightning-button>
+                        &emsp;
+                        <lightning-button variant="brand" label="Save" onclick={handleSubmit}>
+                        </lightning-button>
+                    </footer>
+                </div>
+        </template>
+        <!-- If table generated or previously saved — show the table -->
+        <template if:true={showTable}>
+            <div class="table-container">
+                <div class="table-actions slds-m-bottom_small">
+                    <lightning-button label="Add Row" icon-name="utility:add" onclick={addRow} disabled={isReadOnly}>
+                    </lightning-button>
+                    <lightning-button label="Save Draft" icon-name="utility:save" class="slds-m-left_small"
+                        onclick={handleSave} disabled={isReadOnly}></lightning-button>
+                    <lightning-button label="Save as Final" icon-name="utility:save" class="slds-m-left_small"
+                        onclick={handleSubmitPop} disabled={isReadOnly}></lightning-button>
+                </div>
+
+                <div class="slds-p-around_medium" style="overflow:visible;">
+                    <div class="scroll-container">
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                            <thead>
+                                <tr>
+                                    <th>Outputs</th>
+                                    <template if:true={stageGate}>
+                                        <th>Stage Gate</th>
+                                    </template>
+                                    <template if:true={showAct}>
+                                        <th>Activity</th>
+                                    </template>
+                                    <template if:true={showSubAct}>
+                                        <th>Sub-Activity</th>
+                                    </template>
+                                    <th>Organization name</th>
+                                    <th>Country</th>
+                                    <template if:true={showCountrySNU}>
+                                        <th>Country SNU</th>
+                                    </template>
+                                    <th>Years</th>
+
+                                    <!-- optional columns (render if selected) -->
+                                    <th>Expense group</th>
+                                    <template if:true={showExpenseType}>
+                                        <th>Expense type</th>
+                                    </template>
+
+                                    <template if:true={fundingSource}>
+                                        <th>Funding Source</th>
+                                    </template>
+                                    <template if:true={grp1ACost}>
+                                        <th>Cost (total, US$)</th>
+                                    </template>
+
+                                    <template if:true={grp1BCostPerUnit}>
+                                        <th>Cost (per unit, US$)</th>
+                                    </template>
+
+                                    <template if:true={grp1BMeasUnit}>
+                                        <th>Measurement Unit</th>
+                                    </template>
+
+                                    <template if:true={grp1BNoOfUnits}>
+                                        <th>Number of Units</th>
+                                    </template>
+
+                                    <template if:true={grp1BMultiplier}>
+                                        <th>Multiplier</th>
+                                    </template>
+                                    <template if:true={grp1BTotal}>
+                                        <th>Cost (total, US$)</th>
+                                    </template>
+
+                                    <template if:true={grp2CostPerUnit}>
+                                        <th>Complementary: Cost (total, US$)
+                                        </th>
+                                    </template>
+
+                                    <template if:true={grp2PercUnitaid}>
+                                        <th>Cost (% allocated to Unitaid)
+                                        </th>
+                                    </template>
+
+                                    <template if:true={grp2PercCoFunding}>
+                                        <th>Cost (% allocated to co-funding)
+                                        </th>
+                                    </template>
+                                    <template if:true={grp2USDUnitaid}>
+                                        <th>Cost (total Unitaid, US$)
+                                        </th>
+                                    </template>
+
+                                    <template if:true={grp2USDCoFunding}>
+                                        <th>Cost (total co-funding, US$)
+                                        </th>
+                                    </template>
+
+
+                                    <th>Cost (total project, US$)
+                                    </th>
+
+                                    <template if:true={custom1}>
+                                        <th>{custom1Label}</th>
+                                    </template>
+                                    <template if:true={custom2}>
+                                        <th>{custom2Label}</th>
+                                    </template>
+                                    <template if:true={custom3}>
+                                        <th>{custom3Label}</th>
+                                    </template>
+                                    <template if:true={custom4}>
+                                        <th>{custom4Label}</th>
+                                    </template>
+                                    <template if:true={custom5}>
+                                        <th>{custom5Label}</th>
+                                    </template>
+                                    <template if:true={custom6}>
+                                        <th>{custom6Label}</th>
+                                    </template>
+                                    <template if:true={custom7}>
+                                        <th>{custom7Label}</th>
+                                    </template>
+                                    <template if:true={custom8}>
+                                        <th>{custom8Label}</th>
+                                    </template>
+                                    <template if:true={custom9}>
+                                        <th>{custom9Label}</th>
+                                    </template>
+                                    <template if:true={custom10}>
+                                        <th>{custom10Label}</th>
+                                    </template>
+                                    <template if:true={custom11}>
+                                        <th>{custom11Label}</th>
+                                    </template>
+                                    <template if:true={custom12}>
+                                        <th>{custom12Label}</th>
+                                    </template>
+                                </tr>
+                            </thead>
+                                
+                            <tbody>
+                                <template for:each={rows} for:item="row">
+                                    <tr key={row.id}>
+                                        <!-- Outputs dropdown -->
+                                        <td>
+                                            <lightning-combobox name="output" value={row.output} options={outputOptions}
+                                                placeholder="Select Output" data-id={row.id} disabled={isReadOnly}
+                                                onchange={handleInputChange}>
+                                            </lightning-combobox>
+                                        </td>
+
+                                        <!-- Always shown fields -->
+                                        <template if:true={stageGate}>
+                                            <td>
+                                                <lightning-input data-field="stageGate" disabled={isReadOnly}
+                                                    data-id={row.id} value={row.stageGate} onchange={handleInputChange}>
+                                                </lightning-input>
+                                            </td>
+                                        </template>
+                                        <template if:true={showAct}>
+                                            <td>
+                                                <lightning-input data-field="activity" disabled={isReadOnly}
+                                                    data-id={row.id} value={row.activity} onchange={handleInputChange}>
+                                                </lightning-input>
+                                            </td>
+                                        </template>
+                                        <template if:true={showSubAct}>
+                                            <td>
+                                                <lightning-input data-field="subActivity" disabled={isReadOnly}
+                                                    data-id={row.id} value={row.subActivity}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </td>
+                                        </template>
+
+                                        <td>
+                                            <lightning-combobox name="orgName" value={row.orgName} options={orgNames}
+                                                placeholder="Select Organization" data-field="orgName" data-id={row.id}
+                                                onchange={handleInputChange} disabled={isReadOnly}>
+                                            </lightning-combobox>
+                                        </td>
+
+                                        <td>
+                                            <lightning-combobox name="country" value={row.country}
+                                                options={countryOptions} disabled={isReadOnly}
+                                                placeholder="Select Country" data-id={row.id}
+                                                onchange={handleInputChange}></lightning-combobox>
+                                        </td>
+
+                                        <template if:true={showCountrySNU}>
+                                            <td>
+                                                <lightning-input data-field="countrySNU" data-id={row.id}
+                                                    value={row.countrySNU} disabled={isReadOnly}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </td>
+                                        </template>
+
+                                        <td>
+                                            <lightning-combobox name="year" value={row.year} options={yearOptions}
+                                                placeholder="Select Year" disabled={isReadOnly} data-id={row.id}
+                                                onchange={handleInputChange}></lightning-combobox>
+                                        </td>
+
+                                        <td>
+                                            <lightning-combobox name="expenseGroup" disabled={isReadOnly}
+                                                value={row.expenseGroup} options={expenseGroupOptions}
+                                                placeholder="Select Expense Group" data-id={row.id}
+                                                onchange={handleInputChange}></lightning-combobox>
+                                        </td>
+
+                                        <template if:true={showExpenseType}>
+                                            <td>
+                                                <lightning-combobox name="expenseType" disabled={isReadOnly}
+                                                    value={row.expenseType} options={row.expenseTypeOptions}
+                                                    placeholder="Select Expense Type" data-id={row.id}
+                                                    onchange={handleInputChange}></lightning-combobox>
+                                            </td>
+                                        </template>
+                                        <!-- conditional columns -->
+
+                                        <template if:true={fundingSource}>
+                                            <td>
+                                                <lightning-combobox name="fundingSrc" value={row.fundingSrc}
+                                                    options={fundingSources} disabled={isReadOnly}
+                                                    placeholder="Select Funding Source" data-id={row.id}
+                                                    onchange={handleInputChange}></lightning-combobox>
+                                            </td>
+                                        </template>
+
+                                        <!--
+                                        <template if:true={showUnitCost}>
+                                            <td><lightning-input type="number" data-field="unitCost" data-id={row.id} value={row.unitCost} onchange={handleInputChange}></lightning-input></td>
+                                        </template>
+                                        <template if:true={showNumUnits}>
+                                            <td><lightning-input type="number" data-field="numUnits" data-id={row.id} value={row.numUnits} onchange={handleInputChange}></lightning-input></td>
+                                        </template>
+                                        <template if:true={showPercentUnitaid}>
+                                            <td><lightning-input type="number" data-field="percentUnitaid" data-id={row.id} value={row.percentUnitaid} onchange={handleInputChange}></lightning-input></td>
+                                        </template>
+                                        <template if:true={showTotalCosts}>
+                                            <td><lightning-input type="number" data-field="totalCost" data-id={row.id} value={row.totalCost} onchange={handleInputChange} disabled></lightning-input></td>
+                                        </template>
+                                        <template if:true={showDescription}>
+                                            <td><lightning-input data-field="description" data-id={row.id} value={row.description} onchange={handleInputChange}></lightning-input></td>
+                                        </template>
+                                        <template if:true={showAssumptions}>
+                                            <td><lightning-input data-field="assumptions" data-id={row.id} value={row.assumptions} onchange={handleInputChange}></lightning-input></td>
+                                        </template> -->
+                                        <template if:true={grp1ACost}>
+                                            <th>
+                                                <lightning-input type="number" formatter="currency" step="0.01"
+                                                    data-field="grp1ACostVal" disabled={isReadOnly} data-id={row.id}
+                                                    value={row.grp1ACostVal} onchange={handleInputChange}>
+                                                </lightning-input>
+                                            </th>
+                                        </template>
+
+                                        <template if:true={grp1BCostPerUnit}>
+                                            <th>
+                                                <lightning-input type="number" formatter="currency" step="0.01"
+                                                    data-field="grp1BCostPerUnitVal" disabled={isReadOnly}
+                                                    data-id={row.id} value={row.grp1BCostPerUnitVal}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </th>
+                                        </template>
+
+                                        <template if:true={grp1BMeasUnit}>
+                                            <th>
+                                                <lightning-input data-field="grp1BMeasUnitVal" data-id={row.id}
+                                                    value={row.grp1BMeasUnitVal} disabled={isReadOnly}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </th>
+                                        </template>
+
+                                        <template if:true={grp1BNoOfUnits}>
+                                            <th>
+                                                <lightning-input type="number" data-field="grp1BNoOfUnitsVal"
+                                                    data-id={row.id} disabled={isReadOnly} value={row.grp1BNoOfUnitsVal}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </th>
+                                        </template>
+
+                                        <template if:true={grp1BMultiplier}>
+                                            <th>
+                                                <lightning-input type="number" data-field="grp1BMultiplierVal"
+                                                    data-id={row.id} disabled={isReadOnly}
+                                                    value={row.grp1BMultiplierVal} onchange={handleInputChange}>
+                                                </lightning-input>
+                                            </th>
+                                        </template>
+                                        <template if:true={grp1BTotal}>
+                                            <th>
+                                                <lightning-input type="number" formatter="currency" step="0.01"
+                                                    data-field="grp1BTotalVal" data-id={row.id}
+                                                    value={row.grp1BTotalVal} onchange={handleInputChange} disabled>
+                                                </lightning-input>
+                                            </th>
+                                        </template>
+
+                                        <template if:true={grp2CostPerUnit}>
+                                            <th>
+                                                <lightning-input type="number" formatter="currency" step="0.01"
+                                                    data-field="grp2CostPerUnit" data-id={row.id}
+                                                    value={row.grp2CostPerUnit} onchange={handleInputChange} disabled>
+                                                </lightning-input>
+                                            </th>
+                                        </template>
+
+                                        <template if:true={grp2PercUnitaid}>
+                                            <th>
+                                                <lightning-input type="number" data-field="grp2PercUnitaid"
+                                                    data-id={row.id} value={row.grp2PercUnitaid} disabled={isReadOnly}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </th>
+                                        </template>
+
+                                        <template if:true={grp2PercCoFunding}>
+                                            <th>
+                                                <lightning-input type="number" data-field="grp2PercCoFunding"
+                                                    data-id={row.id} value={row.grp2PercCoFunding} disabled={isReadOnly}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </th>
+                                        </template>
+                                        <template if:true={grp2USDUnitaid}>
+                                            <th>
+                                                <lightning-input type="number" formatter="currency" step="0.01"
+                                                    data-field="grp2USDUnitaid" data-id={row.id}
+                                                    value={row.grp2USDUnitaid} onchange={handleInputChange} disabled>
+                                                </lightning-input>
+                                            </th>
+                                        </template>
+
+                                        <template if:true={grp2USDCoFunding}>
+                                            <th>
+                                                <lightning-input type="number" formatter="currency" step="0.01"
+                                                    data-field="grp2USDCoFunding" data-id={row.id}
+                                                    value={row.grp2USDCoFunding} onchange={handleInputChange} disabled>
+                                                </lightning-input>
+                                            </th>
+                                        </template>
+
+
+                                        <th>
+                                            <lightning-input type="number" formatter="currency" step="0.01"
+                                                data-field="grp2totalProj" data-id={row.id} value={row.grp2totalProj}
+                                                onchange={handleInputChange} disabled></lightning-input>
+                                        </th>
+
+
+                                        <template if:true={custom1}>
+                                            <td>
+                                                <lightning-input data-field="custom1" data-id={row.id}
+                                                    disabled={isReadOnly} value={row.custom1Val}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </td>
+                                        </template>
+                                        <template if:true={custom2}>
+                                            <td>
+                                                <lightning-input data-field="custom2" data-id={row.id}
+                                                    disabled={isReadOnly} value={row.custom2Val}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </td>
+                                        </template>
+                                        <template if:true={custom3}>
+                                            <td>
+                                                <lightning-input data-field="custom3" data-id={row.id}
+                                                    disabled={isReadOnly} value={row.custom3Val}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </td>
+                                        </template>
+                                        <template if:true={custom4}>
+                                            <td>
+                                                <lightning-input data-field="custom4" data-id={row.id}
+                                                    disabled={isReadOnly} value={row.custom4Val}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </td>
+                                        </template>
+                                        <template if:true={custom5}>
+                                            <td>
+                                                <lightning-input data-field="custom5" data-id={row.id}
+                                                    disabled={isReadOnly} value={row.custom5Val}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </td>
+                                        </template>
+                                        <template if:true={custom6}>
+                                            <td>
+                                                <lightning-input data-field="custom6" data-id={row.id}
+                                                    disabled={isReadOnly} value={row.custom6Val}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </td>
+                                        </template>
+                                        <template if:true={custom7}>
+                                            <td>
+                                                <lightning-input data-field="custom7" data-id={row.id}
+                                                    disabled={isReadOnly} value={row.custom7Val}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </td>
+                                        </template>
+                                        <template if:true={custom8}>
+                                            <td>
+                                                <lightning-input data-field="custom8" data-id={row.id}
+                                                    disabled={isReadOnly} value={row.custom8Val}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </td>
+                                        </template>
+                                        <template if:true={custom9}>
+                                            <td>
+                                                <lightning-input data-field="custom9" data-id={row.id}
+                                                    disabled={isReadOnly} value={row.custom9Val}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </td>
+                                        </template>
+                                        <template if:true={custom10}>
+                                            <td>
+                                                <lightning-input data-field="custom10" data-id={row.id}
+                                                    disabled={isReadOnly} value={row.custom10Val}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </td>
+                                        </template>
+                                        <template if:true={custom11}>
+                                            <td>
+                                                <lightning-input data-field="custom11" data-id={row.id}
+                                                    disabled={isReadOnly} value={row.custom11Val}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </td>
+                                        </template>
+                                        <template if:true={custom12}>
+                                            <td>
+                                                <lightning-input data-field="custom12" data-id={row.id}
+                                                    disabled={isReadOnly} value={row.custom12Val}
+                                                    onchange={handleInputChange}></lightning-input>
+                                            </td>
+                                            
+                                        </template>
+
+                                    </tr>
+                                    
+                                </template>
+                            </tbody>
+                        </table><br></br><br></br><br></br>
+                    </div>
+                </div>
+            </div>
+            <div class="slds-m-top_large">
+                <c-u-n-i-budget-data-comparision record-id={recordId}></c-u-n-i-budget-data-comparision>
+            </div>
+        </template>
+    </div>
+</template>

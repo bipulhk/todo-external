@@ -1,0 +1,35 @@
+<template>
+  <div class="container">
+    <!-- budget tab {recordId} -->
+
+    <!-- Version selector -->
+    <div class="version-picker slds-m-bottom_small">
+      <lightning-combobox name="logframeVersion" label="Logframe Version" value={version} placeholder="Select Version"
+        options={logframeVersionOptions} onchange={handleVersionChange}>
+      </lightning-combobox>
+    </div>
+
+    <footer class="tabs-footer">
+      <template for:each={tabs} for:item="tab">
+        <button
+          key={tab.id}
+          class="tab-button"
+          onclick={handleTabClick}
+          data-id={tab.id}
+          title={tab.label}
+        >
+          {tab.label}
+        </button>
+      </template>
+    </footer>
+
+    <br />
+
+    <div class="content-area">
+      <template if:true={activeTab}>
+        <c-u-n-i-dynamic-lwc-loader lwc-name={activeTab.lwcName} lwc-params={activeTab.params}>
+        </c-u-n-i-dynamic-lwc-loader>
+      </template>
+    </div>
+  </div>
+</template>

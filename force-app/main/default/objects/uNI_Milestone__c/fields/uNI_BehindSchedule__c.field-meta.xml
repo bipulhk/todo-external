@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>uNI_BehindSchedule__c</fullName>
+    <formula>AND(
+    TODAY() &gt; uNI_Milestone_Date__c,
+    ISPICKVAL(uNI_Status__c, &quot;Completed&quot;) = FALSE
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Behind Schedule</label>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

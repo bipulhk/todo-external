@@ -1,0 +1,1151 @@
+<template>
+   <!-- IA record passed : {recordId} version passed : {version} -->
+   <template if:true={isBDDraft}>
+      <div class="slds-p-around_medium slds-text-color_error slds-text-heading_small">
+         Current Budget data is in draft status, Budget Overview can be shown after it's Submitted
+      </div>
+   </template>
+   <template if:false={isBDDraft}>
+      <lightning-card title="Principal table #1 - Grant budget overview by expense group & output">
+         <!--table 1-->
+         <!--Table description -->
+         <div class="slds-scrollable_x" style="width: 100%;">
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top_small">
+               <tr>
+                  <template for:each={table1.colwraps} for:item="abbr" for:index="colIndex">
+                     <th key={abbr.name}>
+                        <b>{abbr.name}</b>
+                     </th>
+                  </template>
+               </tr>
+               <template for:each={table1.expenseTypes} for:item="abbr" for:index="colIndex">
+                  <tr key={abbr.Id}>
+                     <td>{abbr.Name}
+                     </td>
+                     <template if:true={table1.isOutput1}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output1__c} data-index={colIndex} data-api="uNI_Output1__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput2}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output2__c} data-index={colIndex} data-api="uNI_Output2__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput3}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output3__c} data-index={colIndex} data-api="uNI_Output3__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput4}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output4__c} data-index={colIndex} data-api="uNI_Output4__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput5}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output5__c} data-index={colIndex} data-api="uNI_Output5__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput6}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output6__c} data-index={colIndex} data-api="uNI_Output6__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput7}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output7__c} data-index={colIndex} data-api="uNI_Output7__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput8}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output8__c} data-index={colIndex} data-api="uNI_Output8__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput9}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output9__c} data-index={colIndex} data-api="uNI_Output9__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput10}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output10__c} data-index={colIndex} data-api="uNI_Output10__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput11}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output11__c} data-index={colIndex} data-api="uNI_Output11__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+
+                     <template if:true={table1.isOutput12}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output12__c} data-index={colIndex} data-api="uNI_Output12__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput13}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output13__c} data-index={colIndex} data-api="uNI_Output13__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput14}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output14__c} data-index={colIndex} data-api="uNI_Output14__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput15}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.uNI_Output15__c} data-index={colIndex} data-api="uNI_Output15__c"
+                              data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+
+                     <td>
+                        <lightning-input type="number" formatter="currency" step="0.01"
+                           message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                           value={abbr.uNI_Cross_Cutting__c} data-index={colIndex} data-api="uNI_Cross_Cutting__c"
+                           data-table="uNI_Expense_Types__c" data-tablename="table1" onchange={handleTableRowChange}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={abbr.uNI_Output_Totals__c} disabled>
+                        </lightning-input>
+                     </td>
+                     <td> <b>{abbr.uNI_ExpensePercent__c}%</b>
+                     </td>
+                  </tr>
+
+               </template>
+               <tr>
+                  <td>
+                     <b> Total </b>
+                  </td>
+
+                  <template if:true={table1.isOutput1}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output1__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table1.isOutput2}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output2__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table1.isOutput3}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output3__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table1.isOutput4}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output4__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table1.isOutput5}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output5__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table1.isOutput6}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output6__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table1.isOutput7}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output7__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table1.isOutput8}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output8__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table1.isOutput9}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output9__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table1.isOutput10}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output10__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table1.isOutput11}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output11__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+
+                  <template if:true={table1.isOutput12}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output12__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table1.isOutput13}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output13__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table1.isOutput14}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output14__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table1.isOutput15}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table1.expSummary.uNI_Output15__c}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table1.isCrossCutting}>
+                     <td>
+
+                        <lightning-input type="number" formatter="currency"
+                           value={table1.expSummary.uNI_Cross_Cutting__c} disabled>
+                        </lightning-input>
+                     </td>
+                  </template> 
+                  <template if:true={table1.isOutput1}>
+                     <td>
+                        <lightning-input type="number" formatter="currency"
+                           value={table1.expSummary.uNI_Output_Totals__c} disabled >
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <td>
+                     <b>100%</b>
+                  </td>
+               </tr>
+            </table>
+         </div>
+         <br/>
+         <!--table 2-->
+         <!--Table description -->
+         <div class="slds-scrollable_x" style="width: 100%;">
+            <div><b>Budget narratives</b><br/> <br/>
+         Key narratives should be added to this table to link $ to main resource drivers and activities. <br/>
+         Metrics indicative of scope/scale/activity target are welcome to provide orders-of-magnitude type of information.
+            </div>
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top_small">
+               <tr>
+                  <template for:each={table2.colwraps} for:item="abbr" for:index="colIndex">
+                     <th key={abbr.name}>
+                        <b>{abbr.name}</b>
+                     </th>
+                  </template>
+               </tr>
+               <template for:each={table1.expenseTypes} for:item="abbr" for:index="colIndex">
+                  <tr key={abbr.Id}>
+                     <td>{abbr.Name}
+                     </td>
+                     <template if:true={table1.isOutput1}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output1Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output1Narrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput2}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output2Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output2Narrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput3}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output3Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output3Narrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput4}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output4Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output4Narrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange}  disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput5}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output5Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output5Narrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput6}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output6Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output6Narrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput7}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output7Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output7Narrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput8}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output8Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output8Narrative__c" data-tablename="table1"
+                              data-table="uNI_Expense_Types__c" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput9}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output9Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output9Narrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput10}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output10Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output10Narrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput11}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output11Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output11Narrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+
+                     <template if:true={table1.isOutput12}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output12Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output12Narrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput13}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output13Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output13Narrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput14}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output14Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output14Narrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table1.isOutput15}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Output15Narrative__c} data-index={colIndex}
+                              data-api="uNI_Output15Narrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                      <template if:true={table1.isCrossCutting}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_CrossCuttingNarrative__c} data-index={colIndex}
+                              data-api="uNI_CrossCuttingNarrative__c" data-table="uNI_Expense_Types__c"
+                              data-tablename="table1" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td> 
+                      </template>
+
+                  </tr>
+
+               </template>
+
+            </table>
+         </div>
+      </lightning-card>
+      <br/> <br/>
+      <!--table 3-->
+      <lightning-card title="Principal table #2 - Grant budget overview by output & years">
+         <!--table 3-->
+         <!--Table description -->
+         <div class="slds-scrollable_x" style="width: 100%;">
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top_small">
+               <tr>
+                  <template for:each={table3.colwraps} for:item="abbr" for:index="colIndex">
+                     <th key={abbr.name}
+                        style="width:15%;white-space: normal !important;word-wrap: break-word;overflow-wrap: break-word;">
+                        <b>{abbr.name}</b>
+                     </th>
+                  </template>
+               </tr>
+               <template for:each={table3.portOutputs} for:item="abbr" for:index="colIndex">
+                  <tr key={abbr.Id}>
+                     <td>{abbr.uNI_OutputTitle__c}
+                     </td>
+                     <template if:true={table3.isYear1}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" value={abbr.uNI_Year1__c}
+                              data-index={colIndex} data-api="uNI_Year1__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear2}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" value={abbr.uNI_Year2__c}
+                              data-index={colIndex} data-api="uNI_Year2__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear3}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" value={abbr.uNI_Year3__c}
+                              data-index={colIndex} data-api="uNI_Year3__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear4}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" value={abbr.uNI_Year4__c}
+                              data-index={colIndex} data-api="uNI_Year4__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear5}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" value={abbr.uNI_Year5__c}
+                              data-index={colIndex} data-api="uNI_Year5__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear6}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" value={abbr.uNI_Year6__c}
+                              data-index={colIndex} data-api="uNI_Year6__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear7}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" value={abbr.uNI_Year7__c}
+                              data-api="uNI_Year7__c" data-index={colIndex} data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear8}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" value={abbr.uNI_Year8__c}
+                              data-index={colIndex} data-api="uNI_Year8__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear1}>
+                        <td style="width: 120px">
+                           <lightning-input type="number" formatter="currency" value={abbr.uNI_total__c}
+                              data-index={colIndex} data-api="uNI_total__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear1}>
+                        <td> <b> {abbr.uNI_YearsPercent__c}% </b>
+                        </td>
+                     </template>
+                  </tr>
+
+               </template>
+               <tr>
+                  <td>
+                     <b> Total </b>
+                  </td>
+                  <template if:true={table3.isYear1}>
+                     <td>
+                        <lightning-input type="number" formatter="currency"
+                           value={table3.portOutputSummary.uNI_Year1__c} data-api="uNI_Year1__c"
+                           data-table="uNI_PortfolioOutput__c" onchange={handleTableRowChange} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table3.isYear2}>
+                     <td>
+                        <lightning-input type="number" formatter="currency"
+                           value={table3.portOutputSummary.uNI_Year2__c} data-api="uNI_Year2__c"
+                           data-table="uNI_PortfolioOutput__c" onchange={handleTableRowChange} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table3.isYear3}>
+                     <td>
+                        <lightning-input type="number" formatter="currency"
+                           value={table3.portOutputSummary.uNI_Year3__c} data-api="uNI_Year3__c"
+                           data-table="uNI_PortfolioOutput__c" onchange={handleTableRowChange} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table3.isYear4}>
+                     <td>
+                        <lightning-input type="number" formatter="currency"
+                           value={table3.portOutputSummary.uNI_Year4__c} data-api="uNI_Year4__c"
+                           data-table="uNI_PortfolioOutput__c" onchange={handleTableRowChange} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table3.isYear5}>
+                     <td>
+                        <lightning-input type="number" formatter="currency"
+                           value={table3.portOutputSummary.uNI_Year5__c} data-api="uNI_Year5__c"
+                           data-table="uNI_PortfolioOutput__c" onchange={handleTableRowChange} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table3.isYear6}>
+                     <td>
+                        <lightning-input type="number" formatter="currency"
+                           value={table3.portOutputSummary.uNI_Year6__c} data-api="uNI_Year6__c"
+                           data-table="uNI_PortfolioOutput__c" onchange={handleTableRowChange} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table3.isYear7}>
+                     <td>
+                        <lightning-input type="number" formatter="currency"
+                           value={table3.portOutputSummary.uNI_Year7__c} data-api="uNI_Year7__c"
+                           data-table="uNI_PortfolioOutput__c" onchange={handleTableRowChange} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table3.isYear8}>
+                     <td>
+                        <lightning-input type="number" formatter="currency"
+                           value={table3.portOutputSummary.uNI_Year8__c} data-api="uNI_Year8__c"
+                           data-table="uNI_PortfolioOutput__c" onchange={handleTableRowChange} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table3.isYear1}>
+                     <td>
+                        <lightning-input type="number" formatter="currency"
+                           value={table3.portOutputSummary.uNI_total__c} data-api="uNI_total__c"
+                           data-table="uNI_PortfolioOutput__c" disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+               </tr>
+            </table>
+         </div>
+         <br/>
+         <!--table 4-->
+         <!--Table description -->
+         <div class="slds-scrollable_x" style="width: 100%;">
+            <div> <b>Budget narratives</b><br/>
+         Brief narratives should be added to this table to link $ to output implementation across the project lifetime.
+            </div>
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top_small">
+               <tr>
+                  <template for:each={table4.colwraps} for:item="abbr" for:index="colIndex">
+                     <th key={abbr.name}
+                        style="width:15%;white-space: normal !important;word-wrap: break-word;overflow-wrap: break-word;">
+
+                        <b>{abbr.name}</b>
+                     </th>
+                  </template>
+               </tr>
+               <template for:each={table3.portOutputs} for:item="abbr" for:index="colIndex">
+                  <tr key={abbr.Id}>
+                     <td>{abbr.uNI_OutputTitle__c}
+                     </td>
+                     <template if:true={table3.isYear1}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Year1Narrative__c} data-index={colIndex}
+                              data-api="uNI_Year1Narrative__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear2}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Year2Narrative__c} data-index={colIndex}
+                              data-api="uNI_Year2Narrative__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear3}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Year3Narrative__c} data-index={colIndex}
+                              data-api="uNI_Year3Narrative__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear4}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Year4Narrative__c} data-index={colIndex}
+                              data-api="uNI_Year4Narrative__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear5}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Year5Narrative__c} data-index={colIndex}
+                              data-api="uNI_Year5Narrative__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear6}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Year6Narrative__c} data-index={colIndex}
+                              data-api="uNI_Year6Narrative__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear7}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Year7Narrative__c} data-index={colIndex}
+                              data-api="uNI_Year7Narrative__c" data-table="uNI_PortfolioOutput__c"
+                              data-tablename="table3" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table3.isYear8}>
+                        <td>
+                           <lightning-textarea value={abbr.uNI_Year8Narrative__c} data-index={colIndex}
+                              data-api="uNI_Year8Narrative__c" data-tablename="table3"
+                              data-table="uNI_PortfolioOutput__c" onchange={handleTableRowChange} disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+
+                  </tr>
+
+               </template>
+
+            </table>
+         </div>
+      </lightning-card>
+      <br/> <br/>
+      <!--table 5-->
+      <lightning-card title="Principal table #3 - by output & consortium member(s)">
+         <!--table 5-->
+         <!--Table description -->
+         <div class="slds-scrollable_x" style="width: 100%;">
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top_small">
+               <tr>
+                  <template for:each={table5.colwraps} for:item="abbr" for:index="colIndex">
+                     <th key={abbr.name}
+                        style="width:15%;white-space: normal !important;word-wrap: break-word;overflow-wrap: break-word;">
+                        <b>{abbr.name}</b> </br>
+                        <b>{abbr.name2}</b>
+                     </th>
+                  </template>
+               </tr>
+               <template for:each={table5.consMembers} for:item="abbr" for:index="colIndex">
+                  <tr key={abbr.outputName}>
+                     <td>{abbr.outputName}
+                     </td>
+
+
+                     <td>
+                        <lightning-input type="number" formatter="currency" step="0.01"
+                           message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                           value={abbr.LeadOrganizationVal} data-index={colIndex} data-subno="0"
+                           data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c" data-ouput1={abbr.outputAPI}
+                           data-tablename="table5" onchange={handleTableRowChange} disabled>
+                        </lightning-input>
+                     </td>
+
+
+                     <template if:true={table5.isSubImp1}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.subImp1} data-index={colIndex} data-subno="1" data-api="LeadOrganizationVal"
+                              data-table="uNI_SummaryBudget__c" data-ouput1={abbr.outputAPI} data-tablename="table5"
+                              onchange={handleTableRowChange} disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table5.isSubImp2}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.subImp2} data-index={colIndex} data-subno="2" data-api="LeadOrganizationVal"
+                              data-table="uNI_SummaryBudget__c" data-ouput1={abbr.outputAPI} data-tablename="table5"
+                              onchange={handleTableRowChange} disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table5.isSubImp3}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.subImp3} data-index={colIndex} data-subno="3" data-api="LeadOrganizationVal"
+                              data-table="uNI_SummaryBudget__c" data-ouput1={abbr.outputAPI} data-tablename="table5"
+                              onchange={handleTableRowChange} disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table5.isSubImp4}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.LeadOrganizationVal} data-index={colIndex} data-subno="4"
+                              data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c"
+                              data-ouput1={abbr.outputAPI} data-tablename="table5" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table5.isSubImp5}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.LeadOrganizationVal} data-index={colIndex} data-subno="5"
+                              data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c"
+                              data-ouput1={abbr.outputAPI} data-tablename="table5" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table5.isSubImp6}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.LeadOrganizationVal} data-index={colIndex} data-subno="6"
+                              data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c"
+                              data-ouput1={abbr.outputAPI} data-tablename="table5" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table5.isSubImp7}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.LeadOrganizationVal} data-index={colIndex} data-subno="7"
+                              data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c"
+                              data-ouput1={abbr.outputAPI} data-tablename="table5" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+                     <template if:true={table5.isSubImp8}>
+                        <td>
+                           <lightning-input type="number" formatter="currency" step="0.01"
+                              message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                              value={abbr.LeadOrganizationVal} data-index={colIndex} data-subno="8"
+                              data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c"
+                              data-ouput1={abbr.outputAPI} data-tablename="table5" onchange={handleTableRowChange}
+                              disabled>
+                           </lightning-input>
+                        </td>
+                     </template>
+
+                     <td>
+                        <lightning-input type="number" formatter="currency" step="0.01"
+                           message-when-type-mismatch="Please enter a valid currency value (e.g., 123.45)."
+                           value={abbr.totalVal} data-index={colIndex} data-subno="8" data-api="LeadOrganizationVal"
+                           data-table="uNI_SummaryBudget__c" data-ouput1={abbr.outputAPI} data-tablename="table5"
+                           onchange={handleTableRowChange} disabled>
+                        </lightning-input>
+                     </td>
+                  </tr>
+
+               </template>
+               <tr>
+                  <td>
+                     <b> Total </b>
+                  </td>
+                  <template if:true={table5.showData}>
+                     <td>
+                        <lightning-input type="number" formatter="currency"
+                           value={table5.consMembTotal.LeadOrganizationVal} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp1}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table5.consMembTotal.subImp1}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp2}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table5.consMembTotal.subImp2}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp3}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table5.consMembTotal.subImp3}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp4}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table5.consMembTotal.subImp4}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp5}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table5.consMembTotal.subImp5}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp6}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table5.consMembTotal.subImp6}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp7}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table5.consMembTotal.subImp7}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp8}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table5.consMembTotal.subImp8}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.showData}>
+                     <td>
+                        <lightning-input type="number" formatter="currency" value={table5.consMembTotal.rowTotal}
+                           disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+               </tr>
+
+               <tr>
+                  <td>
+                     <b> % </b>
+                  </td>
+                  <template if:true={table5.showData}>
+                     <td>
+                        <lightning-input type="number" value={table5.consMembPerc.LeadOrganizationVal} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp1}>
+                     <td>
+                        <lightning-input type="number" value={table5.consMembPerc.subImp1} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp2}>
+                     <td>
+                        <lightning-input type="number" value={table5.consMembPerc.subImp2} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp3}>
+                     <td>
+                        <lightning-input type="number" value={table5.consMembPerc.subImp3} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp4}>
+                     <td>
+                        <lightning-input type="number" value={table5.consMembPerc.subImp4} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp5}>
+                     <td>
+                        <lightning-input type="number" value={table5.consMembPerc.subImp5} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp6}>
+                     <td>
+                        <lightning-input type="number" value={table5.consMembPerc.subImp6} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp7}>
+                     <td>
+                        <lightning-input type="number" value={table5.consMembPerc.subImp7} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.isSubImp8}>
+                     <td>
+                        <lightning-input type="number" value={table5.consMembPerc.subImp8} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+                  <template if:true={table5.showData}>
+                     <td>
+                        <lightning-input type="number" value={table5.consMembPerc.rowTotal} disabled>
+                        </lightning-input>
+                     </td>
+                  </template>
+               </tr>
+            </table>
+         </div>
+         <br/>
+         <!--table 6-->
+         <!--Table description -->
+         <div class="slds-scrollable_x" style="width: 100%;">
+            <div><b>Budget narratives</b><br/>Brief narratives should be added to this table to link $ to respective roles of consortium partners
+            </div>
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top_small">
+               <tr>
+                  <template for:each={table6.colwraps} for:item="abbr" for:index="colIndex">
+                     <th key={abbr.name}
+                        style="width:15%;white-space: normal !important;word-wrap: break-word;overflow-wrap: break-word;">
+
+                        <b>{abbr.name}</b> <br/>
+                        <b>{abbr.name2}</b>
+                     </th>
+                  </template>
+               </tr>
+               <template for:each={table5.consMembers} for:item="abbr" for:index="colIndex">
+                  <tr key={abbr.outputName}
+                     style="width:15%;white-space: normal !important;word-wrap: break-word;overflow-wrap: break-word;">
+                     <td>{abbr.outputName}
+                     </td>
+
+
+                     <td>
+                        <lightning-textarea value={abbr.LeadOrganizationNarr} data-index={colIndex} data-subno="0"
+                           data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c" data-ouput1={abbr.outputAPI}
+                           data-tablename="table5" onchange={handleTableRowChange} disabled={isReadOnly}>
+                        </lightning-textarea>
+                     </td>
+
+                     <template if:true={table5.isSubImp1}>
+                        <td>
+                           <lightning-textarea value={abbr.subImp1Narr} data-index={colIndex} data-subno="1"
+                              data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c"
+                              data-ouput1={abbr.outputAPI} data-tablename="table5" onchange={handleTableRowChange}
+                              disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table5.isSubImp2}>
+                        <td>
+                           <lightning-textarea value={abbr.subImp2Narr} data-index={colIndex} data-subno="2"
+                              data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c"
+                              data-ouput1={abbr.outputAPI} data-tablename="table5" onchange={handleTableRowChange}
+                              disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table5.isSubImp3}>
+                        <td>
+                           <lightning-textarea value={abbr.subImp3Narr} data-index={colIndex} data-subno="3"
+                              data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c"
+                              data-ouput1={abbr.outputAPI} data-tablename="table5" onchange={handleTableRowChange}
+                              disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table5.isSubImp4}>
+                        <td>
+                           <lightning-textarea value={abbr.subImp4Narr} data-index={colIndex} data-subno="4"
+                              data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c"
+                              data-ouput1={abbr.outputAPI} data-tablename="table5" onchange={handleTableRowChange}
+                              disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table5.isSubImp5}>
+                        <td>
+                           <lightning-textarea value={abbr.subImp5Narr} data-index={colIndex} data-subno="5"
+                              data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c"
+                              data-ouput1={abbr.outputAPI} data-tablename="table5" onchange={handleTableRowChange}
+                              disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table5.isSubImp6}>
+                        <td>
+                           <lightning-textarea value={abbr.subImp6Narr} data-index={colIndex} data-subno="6"
+                              data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c"
+                              data-ouput1={abbr.outputAPI} data-tablename="table5" onchange={handleTableRowChange}
+                              disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table5.isSubImp7}>
+                        <td>
+                           <lightning-textarea value={abbr.subImp7Narr} data-index={colIndex} data-subno="7"
+                              data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c"
+                              data-ouput1={abbr.outputAPI} data-tablename="table5" onchange={handleTableRowChange}
+                              disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+                     <template if:true={table5.isSubImp8}>
+                        <td>
+                           <lightning-textarea value={abbr.subImp8Narr} data-index={colIndex} data-subno="8"
+                              data-api="LeadOrganizationVal" data-table="uNI_SummaryBudget__c"
+                              data-ouput1={abbr.outputAPI} data-tablename="table5" onchange={handleTableRowChange}
+                              disabled={isReadOnly}>
+                           </lightning-textarea>
+                        </td>
+                     </template>
+
+
+
+                  </tr>
+
+               </template>
+
+            </table>
+         </div>
+      </lightning-card> <br>
+      <div style="text-align:center">
+         <lightning-button variant="brand" label="Save Draft" onclick={handleSave} class="slds-m-top_medium"
+            disabled={isReadOnly}>
+         </lightning-button>
+         &emsp;
+         <lightning-button variant="brand" label="Submit" onclick={handleSubmit} class="slds-m-top_medium"
+            disabled={isReadOnly}>
+         </lightning-button>
+      </div>
+      <div class="slds-m-top_large">
+         <c-u-n-i-budget-overview-comparision record-id={recordId}></c-u-n-i-budget-overview-comparision>
+      </div>
+   </template>
+</template>
