@@ -1197,3 +1197,941 @@ If you want, I can fix it by:
 Tell me if you want me to implement that.
 
 ---
+
+
+**User**
+
+please do 1 and 2
+
+---
+
+
+**User**
+
+<turn_aborted>
+  <turn_id>84</turn_id>
+  <reason>interrupted</reason>
+  <guidance>The user interrupted the previous turn. Do not continue or repeat work from that turn unless the user explicitly asks. If any tools/commands were aborted, they may have partially executed; verify current state before retrying.</guidance>
+</turn_aborted>
+
+---
+
+
+**User**
+
+please do 1 and 2, before doing that tell me in simple language what was getting missed, what will be added more so that all things are cloned correctly without any duplicates outcomes and outputs etc
+
+---
+
+
+**OpenAI Codex**
+
+Here’s the simple explanation before I change anything:
+
+What was getting missed
+- **Budget rows were cloned but still linked to old (v1) Outputs.**  
+  So in v2, the output picklist doesn’t show those v1 outputs and the rows look like data is missing.
+- **Custom columns (Custom1–Custom12) were not cloned at all.**  
+  Those fields never get queried in `uNI_CloneBudgetData`, so they get lost in v2.
+
+What I will add (no duplicates)
+1) **Output remap:** After cloning, I’ll map old output → new output **by Internal Sequence (or name as fallback)** and update the cloned budget rows to point to the v2 outputs.  
+   This won’t create duplicates—just fixes the references.
+2) **Clone custom fields:** I’ll include `uNI_Custom1..12` fields in the clone query and copy them into the new records.
+
+If that sounds right, say “go ahead” and I’ll implement it.
+
+---
+
+
+**User**
+
+yes the new budget rows should be tagged to the new outputs. 
+2nd point also should be done , implement these keeping in mind whatever is already bieng cloned/ made in the uNI_CreateReprogrammingRequest  and uNI_ReturnReprogrammingRequest  flow.
+
+---
+
+
+**User**
+
+<turn_aborted>
+  <turn_id>89</turn_id>
+  <reason>interrupted</reason>
+  <guidance>The user interrupted the previous turn. Do not continue or repeat work from that turn unless the user explicitly asks. If any tools/commands were aborted, they may have partially executed; verify current state before retrying.</guidance>
+</turn_aborted>
+
+---
+
+
+**User**
+
+yes the new budget rows should be tagged to the new outputs. 
+2nd point also should be done , implement these keeping in mind whatever is already bieng cloned/ made in the uNI_CreateReprogrammingRequest  and uNI_ReturnReprogrammingRequest  flow, so that no duplicates are made and the new records are tagged to the latest versions
+
+---
+
+
+**User**
+
+<turn_aborted>
+  <turn_id>92</turn_id>
+  <reason>interrupted</reason>
+  <guidance>The user interrupted the previous turn. Do not continue or repeat work from that turn unless the user explicitly asks. If any tools/commands were aborted, they may have partially executed; verify current state before retrying.</guidance>
+</turn_aborted>
+
+---
+
+
+**User**
+
+yes the new budget rows should be tagged to the new outputs. 
+2nd point also should be done , implement these keeping in mind whatever is already bieng cloned/ made in the uNI_CreateReprogrammingRequest  and uNI_ReturnReprogrammingRequest  flow, so that no duplicates are made and the new records are tagged to the latest correct versions
+
+---
+
+
+**OpenAI Codex**
+
+Done. I implemented both items in `uNI_CloneBudgetData` with no duplicate creation:
+
+What I changed
+1) Output remap  
+- New helper `buildOutputIdMap` maps **old output → new output** using:
+  - `uNI_InternalSequence__c` first
+  - fallback to `uNI_OutputTitle__c`
+- During budget row cloning, the cloned rows now point to the **new v2 outputs**.
+
+2) Custom fields cloned  
+- Added all `uNI_Custom1..12` fields to the budget data query, so they are carried into the cloned rows.
+
+File changed
+- `force-app/main/default/classes/uNI_CloneBudgetData.cls`
+
+Notes
+- This only affects **future clones**. Existing v2 rows created earlier still point to v1 outputs; if you want, I can give you a one‑time script to remap those too.
+
+Do you want me to generate a cleanup script to update existing v2 budget rows to the new outputs?
+
+---
+
+
+**User**
+
+please give me the onetime script
+
+---
+
+
+**OpenAI Codex**
+
+Here’s a one‑time **Execute Anonymous** script to remap existing **v2 BudgetData rows** to the **new v2 Outputs** (no inserts, only updates). It maps by `uNI_InternalSequence__c` first, then `uNI_OutputTitle__c` as fallback.
+
+```apex
+// === INPUTS ===
+Id iaId = '0iTFT00000004212AA';
+String sourceVersion = '1';
+String targetVersion = '2';
+
+// === Build old->new output map ===
+Map<String, Id> newBySeq = new Map<String, Id>();
+Map<String, Id> newByTitle = new Map<String, Id>();
+
+List<uNI_PortfolioOutput__c> newOutputs = [
+    SELECT Id, uNI_InternalSequence__c, uNI_OutputTitle__c, uNI_Version__c
+    FROM uNI_PortfolioOutput__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :targetVersion
+];
+for (uNI_PortfolioOutput__c o : newOutputs) {
+    if (o.uNI_InternalSequence__c != null) {
+        newBySeq.put(String.valueOf(o.uNI_InternalSequence__c), o.Id);
+    }
+    if (o.uNI_OutputTitle__c != null) {
+        String key = o.uNI_OutputTitle__c.trim().toLowerCase();
+        if (!newByTitle.containsKey(key)) {
+            newByTitle.put(key, o.Id);
+        }
+    }
+}
+
+Map<Id, Id> oldToNew = new Map<Id, Id>();
+List<uNI_PortfolioOutput__c> oldOutputs = [
+    SELECT Id, uNI_InternalSequence__c, uNI_OutputTitle__c, uNI_Version__c
+    FROM uNI_PortfolioOutput__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :sourceVersion
+];
+for (uNI_PortfolioOutput__c o : oldOutputs) {
+    Id targetId;
+    if (o.uNI_InternalSequence__c != null) {
+        targetId = newBySeq.get(String.valueOf(o.uNI_InternalSequence__c));
+    }
+    if (targetId == null && o.uNI_OutputTitle__c != null) {
+        targetId = newByTitle.get(o.uNI_OutputTitle__c.trim().toLowerCase());
+    }
+    if (targetId != null) {
+        oldToNew.put(o.Id, targetId);
+    }
+}
+
+System.debug('Old->New Output map size: ' + oldToNew.size());
+
+// === Update BudgetData rows in targetVersion that still reference old outputs ===
+List<uNI_BudgetData__c> rows = [
+    SELECT Id, uNI_PortfolioOutput__c, uNI_Version__c
+    FROM uNI_BudgetData__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :targetVersion
+      AND uNI_PortfolioOutput__c IN :oldToNew.keySet()
+];
+
+for (uNI_BudgetData__c r : rows) {
+    r.uNI_PortfolioOutput__c = oldToNew.get(r.uNI_PortfolioOutput__c);
+}
+
+System.debug('BudgetData rows to update: ' + rows.size());
+if (!rows.isEmpty()) {
+    update rows;
+}
+```
+
+If you want this to also remap **Summary Budget** lookups in the same way, tell me and I’ll extend the script.
+
+---
+
+
+**User**
+
+give me the whole script so that the data is fixed.
+
+---
+
+
+**OpenAI Codex**
+
+Here’s a **complete one‑time Execute Anonymous** script that fixes the existing data by:
+
+1) **Retagging v2 BudgetData rows to v2 Outputs** (using Internal Sequence, fallback to Output Title).  
+2) **Backfilling Custom1–Custom12 fields** from matching v1 rows (only if v2 is blank to avoid overwriting).
+
+Paste into **Execute Anonymous** and run:
+
+```apex
+// ==========================
+// INPUTS
+// ==========================
+Id iaId = '0iTFT00000004212AA';
+String sourceVersion = '1';
+String targetVersion = '2';
+
+// ==========================
+// Helpers
+// ==========================
+String norm(Object v) {
+    if (v == null) return '';
+    return String.valueOf(v).trim().toLowerCase();
+}
+
+// Build output key: InternalSequence (preferred) else Title
+String outputKey(uNI_PortfolioOutput__c o) {
+    if (o == null) return '';
+    if (o.uNI_InternalSequence__c != null) {
+        return 'seq:' + String.valueOf(o.uNI_InternalSequence__c);
+    }
+    if (o.uNI_OutputTitle__c != null) {
+        return 'title:' + o.uNI_OutputTitle__c.trim().toLowerCase();
+    }
+    return '';
+}
+
+// Build summary budget key by Name (can include more if needed)
+String summaryKey(uNI_SummaryBudget__c sb) {
+    if (sb == null) return '';
+    return 'name:' + (sb.Name == null ? '' : sb.Name.trim().toLowerCase());
+}
+
+// ==========================
+// 1) Build old -> new Output map
+// ==========================
+List<uNI_PortfolioOutput__c> oldOutputs = [
+    SELECT Id, uNI_InternalSequence__c, uNI_OutputTitle__c
+    FROM uNI_PortfolioOutput__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :sourceVersion
+];
+
+List<uNI_PortfolioOutput__c> newOutputs = [
+    SELECT Id, uNI_InternalSequence__c, uNI_OutputTitle__c
+    FROM uNI_PortfolioOutput__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :targetVersion
+];
+
+Map<String, Id> newByKey = new Map<String, Id>();
+for (uNI_PortfolioOutput__c o : newOutputs) {
+    String k = outputKey(o);
+    if (k != '') newByKey.put(k, o.Id);
+}
+
+Map<Id, Id> oldToNewOutput = new Map<Id, Id>();
+for (uNI_PortfolioOutput__c o : oldOutputs) {
+    String k = outputKey(o);
+    if (k != '' && newByKey.containsKey(k)) {
+        oldToNewOutput.put(o.Id, newByKey.get(k));
+    }
+}
+System.debug('Old->New output map size: ' + oldToNewOutput.size());
+
+// ==========================
+// 2) Build Summary Budget name maps (for matching v1/v2 rows)
+// ==========================
+List<uNI_SummaryBudget__c> allSummaries = [
+    SELECT Id, Name
+    FROM uNI_SummaryBudget__c
+    WHERE uNI_IndividualApplication__c = :iaId
+];
+
+Map<Id, String> summaryKeyById = new Map<Id, String>();
+for (uNI_SummaryBudget__c sb : allSummaries) {
+    summaryKeyById.put(sb.Id, summaryKey(sb));
+}
+
+// ==========================
+// 3) Query BudgetData v1 and v2
+// ==========================
+List<uNI_BudgetData__c> v1Rows = [
+    SELECT Id,
+           uNI_PortfolioOutput__c,
+           uNI_Summary_Budget__c,
+           uNI_Years__c,
+           uNI_ExpenseGroup__c,
+           uNI_ExpenseType__c,
+           uNI_Activity__c,
+           uNI_SubActivity__c,
+           uNI_Country__c,
+           uNI_CountrySNU__c,
+           uNI_StageGate__c,
+           uNI_FundingSource__c,
+           uNI_UnitCost__c,
+           uNI_NoofUnits__c,
+           uNI_AllocatedtoUnitaid__c,
+           uNI_TotalCost__c,
+           uNI_Custom1Text__c,
+           uNI_Custom2Text__c,
+           uNI_Custom3Text__c,
+           uNI_Custom4Perc__c,
+           uNI_Custom5Perc__c,
+           uNI_Custom6Perc__c,
+           uNI_Custom7US__c,
+           uNI_Custom8US__c,
+           uNI_Custom9US__c,
+           uNI_Custom10Num__c,
+           uNI_Custom11Num__c,
+           uNI_Custom12Num__c
+    FROM uNI_BudgetData__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :sourceVersion
+];
+
+List<uNI_BudgetData__c> v2Rows = [
+    SELECT Id,
+           uNI_PortfolioOutput__c,
+           uNI_Summary_Budget__c,
+           uNI_Years__c,
+           uNI_ExpenseGroup__c,
+           uNI_ExpenseType__c,
+           uNI_Activity__c,
+           uNI_SubActivity__c,
+           uNI_Country__c,
+           uNI_CountrySNU__c,
+           uNI_StageGate__c,
+           uNI_FundingSource__c,
+           uNI_UnitCost__c,
+           uNI_NoofUnits__c,
+           uNI_AllocatedtoUnitaid__c,
+           uNI_TotalCost__c,
+           uNI_Custom1Text__c,
+           uNI_Custom2Text__c,
+           uNI_Custom3Text__c,
+           uNI_Custom4Perc__c,
+           uNI_Custom5Perc__c,
+           uNI_Custom6Perc__c,
+           uNI_Custom7US__c,
+           uNI_Custom8US__c,
+           uNI_Custom9US__c,
+           uNI_Custom10Num__c,
+           uNI_Custom11Num__c,
+           uNI_Custom12Num__c
+    FROM uNI_BudgetData__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :targetVersion
+];
+
+// ==========================
+// 4) Build key for matching
+// ==========================
+String buildRowKey(uNI_BudgetData__c r) {
+    String outKey = '';
+    if (r.uNI_PortfolioOutput__c != null) {
+        // Use output Id to find key (old or new output still OK because key is seq/title)
+        Id outId = r.uNI_PortfolioOutput__c;
+        // We need the output record to resolve internal sequence/title.
+        // Instead, use output Id in maps from oldToNewOutput and newByKey.
+        // We'll approximate by mapping output Id -> key via a lookup query once.
+    }
+    return '';
+}
+
+// Build outputId -> key map
+Set<Id> outputIds = new Set<Id>();
+for (uNI_BudgetData__c r : v1Rows) if (r.uNI_PortfolioOutput__c != null) outputIds.add(r.uNI_PortfolioOutput__c);
+for (uNI_BudgetData__c r : v2Rows) if (r.uNI_PortfolioOutput__c != null) outputIds.add(r.uNI_PortfolioOutput__c);
+
+Map<Id, String> outputKeyById = new Map<Id, String>();
+if (!outputIds.isEmpty()) {
+    for (uNI_PortfolioOutput__c o : [
+        SELECT Id, uNI_InternalSequence__c, uNI_OutputTitle__c
+        FROM uNI_PortfolioOutput__c
+        WHERE Id IN :outputIds
+    ]) {
+        outputKeyById.put(o.Id, outputKey(o));
+    }
+}
+
+// Build v1 map by composite key
+Map<String, uNI_BudgetData__c> v1ByKey = new Map<String, uNI_BudgetData__c>();
+
+for (uNI_BudgetData__c r : v1Rows) {
+    String key = String.join(new List<String>{
+        'o:' + norm(outputKeyById.get(r.uNI_PortfolioOutput__c)),
+        's:' + norm(summaryKeyById.get(r.uNI_Summary_Budget__c)),
+        'y:' + norm(r.uNI_Years__c),
+        'eg:' + norm(r.uNI_ExpenseGroup__c),
+        'et:' + norm(r.uNI_ExpenseType__c),
+        'act:' + norm(r.uNI_Activity__c),
+        'sub:' + norm(r.uNI_SubActivity__c),
+        'cty:' + norm(r.uNI_Country__c),
+        'csnu:' + norm(r.uNI_CountrySNU__c),
+        'sg:' + norm(r.uNI_StageGate__c),
+        'fs:' + norm(r.uNI_FundingSource__c),
+        'uc:' + norm(r.uNI_UnitCost__c),
+        'nu:' + norm(r.uNI_NoofUnits__c),
+        'pu:' + norm(r.uNI_AllocatedtoUnitaid__c),
+        'tc:' + norm(r.uNI_TotalCost__c)
+    }, '|');
+
+    if (!v1ByKey.containsKey(key)) {
+        v1ByKey.put(key, r);
+    }
+}
+
+// ==========================
+// 5) Update v2 rows (output remap + custom fields fill)
+// ==========================
+List<uNI_BudgetData__c> updates = new List<uNI_BudgetData__c>();
+
+for (uNI_BudgetData__c r : v2Rows) {
+    Boolean changed = false;
+    uNI_BudgetData__c u = new uNI_BudgetData__c(Id = r.Id);
+
+    // Remap output if still old
+    if (r.uNI_PortfolioOutput__c != null && oldToNewOutput.containsKey(r.uNI_PortfolioOutput__c)) {
+        u.uNI_PortfolioOutput__c = oldToNewOutput.get(r.uNI_PortfolioOutput__c);
+        changed = true;
+    }
+
+    // Match v1 row to copy custom fields (only if v2 is blank)
+    String key = String.join(new List<String>{
+        'o:' + norm(outputKeyById.get(r.uNI_PortfolioOutput__c)),
+        's:' + norm(summaryKeyById.get(r.uNI_Summary_Budget__c)),
+        'y:' + norm(r.uNI_Years__c),
+        'eg:' + norm(r.uNI_ExpenseGroup__c),
+        'et:' + norm(r.uNI_ExpenseType__c),
+        'act:' + norm(r.uNI_Activity__c),
+        'sub:' + norm(r.uNI_SubActivity__c),
+        'cty:' + norm(r.uNI_Country__c),
+        'csnu:' + norm(r.uNI_CountrySNU__c),
+        'sg:' + norm(r.uNI_StageGate__c),
+        'fs:' + norm(r.uNI_FundingSource__c),
+        'uc:' + norm(r.uNI_UnitCost__c),
+        'nu:' + norm(r.uNI_NoofUnits__c),
+        'pu:' + norm(r.uNI_AllocatedtoUnitaid__c),
+        'tc:' + norm(r.uNI_TotalCost__c)
+    }, '|');
+
+    if (v1ByKey.containsKey(key)) {
+        uNI_BudgetData__c src = v1ByKey.get(key);
+
+        if (r.uNI_Custom1Text__c == null && src.uNI_Custom1Text__c != null) { u.uNI_Custom1Text__c = src.uNI_Custom1Text__c; changed = true; }
+        if (r.uNI_Custom2Text__c == null && src.uNI_Custom2Text__c != null) { u.uNI_Custom2Text__c = src.uNI_Custom2Text__c; changed = true; }
+        if (r.uNI_Custom3Text__c == null && src.uNI_Custom3Text__c != null) { u.uNI_Custom3Text__c = src.uNI_Custom3Text__c; changed = true; }
+        if (r.uNI_Custom4Perc__c == null && src.uNI_Custom4Perc__c != null) { u.uNI_Custom4Perc__c = src.uNI_Custom4Perc__c; changed = true; }
+        if (r.uNI_Custom5Perc__c == null && src.uNI_Custom5Perc__c != null) { u.uNI_Custom5Perc__c = src.uNI_Custom5Perc__c; changed = true; }
+        if (r.uNI_Custom6Perc__c == null && src.uNI_Custom6Perc__c != null) { u.uNI_Custom6Perc__c = src.uNI_Custom6Perc__c; changed = true; }
+        if (r.uNI_Custom7US__c == null && src.uNI_Custom7US__c != null) { u.uNI_Custom7US__c = src.uNI_Custom7US__c; changed = true; }
+        if (r.uNI_Custom8US__c == null && src.uNI_Custom8US__c != null) { u.uNI_Custom8US__c = src.uNI_Custom8US__c; changed = true; }
+        if (r.uNI_Custom9US__c == null && src.uNI_Custom9US__c != null) { u.uNI_Custom9US__c = src.uNI_Custom9US__c; changed = true; }
+        if (r.uNI_Custom10Num__c == null && src.uNI_Custom10Num__c != null) { u.uNI_Custom10Num__c = src.uNI_Custom10Num__c; changed = true; }
+        if (r.uNI_Custom11Num__c == null && src.uNI_Custom11Num__c != null) { u.uNI_Custom11Num__c = src.uNI_Custom11Num__c; changed = true; }
+        if (r.uNI_Custom12Num__c == null && src.uNI_Custom12Num__c != null) { u.uNI_Custom12Num__c = src.uNI_Custom12Num__c; changed = true; }
+    }
+
+    if (changed) {
+        updates.add(u);
+    }
+}
+
+System.debug('Rows to update: ' + updates.size());
+if (!updates.isEmpty()) {
+    update updates;
+}
+```
+
+If you want it to **also remap Summary Budget lookups**, tell me and I’ll extend the script.
+
+---
+
+
+**User**
+
+Line: undefined, Column: undefined
+Response to EXEC was : HTTP ERROR 431 Request Header Fields Too Large
+URI:	. HTTP CODE[431]
+
+---
+
+
+**OpenAI Codex**
+
+That 431 happens because **Execute Anonymous uses a URL** and the script was too large. We need to run **smaller scripts**, one at a time.
+
+Below are **two short scripts** you can run separately.
+
+---
+
+**Script 1 — Remap v2 BudgetData rows to v2 Outputs**
+
+```apex
+Id iaId = '0iTFT00000004212AA';
+String v1 = '1';
+String v2 = '2';
+
+// Build v2 output lookup
+Map<String, Id> newBySeq = new Map<String, Id>();
+Map<String, Id> newByTitle = new Map<String, Id>();
+for (uNI_PortfolioOutput__c o : [
+    SELECT Id, uNI_InternalSequence__c, uNI_OutputTitle__c
+    FROM uNI_PortfolioOutput__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :v2
+]) {
+    if (o.uNI_InternalSequence__c != null) newBySeq.put(String.valueOf(o.uNI_InternalSequence__c), o.Id);
+    if (o.uNI_OutputTitle__c != null) newByTitle.put(o.uNI_OutputTitle__c.trim().toLowerCase(), o.Id);
+}
+
+// Map v1 output -> v2 output
+Map<Id, Id> oldToNew = new Map<Id, Id>();
+for (uNI_PortfolioOutput__c o : [
+    SELECT Id, uNI_InternalSequence__c, uNI_OutputTitle__c
+    FROM uNI_PortfolioOutput__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :v1
+]) {
+    Id targetId = (o.uNI_InternalSequence__c != null)
+        ? newBySeq.get(String.valueOf(o.uNI_InternalSequence__c))
+        : null;
+    if (targetId == null && o.uNI_OutputTitle__c != null)
+        targetId = newByTitle.get(o.uNI_OutputTitle__c.trim().toLowerCase());
+    if (targetId != null) oldToNew.put(o.Id, targetId);
+}
+
+// Update v2 budget rows still pointing to v1 outputs
+List<uNI_BudgetData__c> rows = [
+    SELECT Id, uNI_PortfolioOutput__c
+    FROM uNI_BudgetData__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :v2
+      AND uNI_PortfolioOutput__c IN :oldToNew.keySet()
+];
+
+for (uNI_BudgetData__c r : rows) {
+    r.uNI_PortfolioOutput__c = oldToNew.get(r.uNI_PortfolioOutput__c);
+}
+
+System.debug('Rows to update: ' + rows.size());
+if (!rows.isEmpty()) update rows;
+```
+
+---
+
+**Script 2 — Backfill Custom1–12 from v1 → v2**
+
+```apex
+Id iaId = '0iTFT00000004212AA';
+String v1 = '1';
+String v2 = '2';
+
+List<String> customFields = new List<String>{
+    'uNI_Custom1Text__c','uNI_Custom2Text__c','uNI_Custom3Text__c',
+    'uNI_Custom4Perc__c','uNI_Custom5Perc__c','uNI_Custom6Perc__c',
+    'uNI_Custom7US__c','uNI_Custom8US__c','uNI_Custom9US__c',
+    'uNI_Custom10Num__c','uNI_Custom11Num__c','uNI_Custom12Num__c'
+};
+
+// Build v1 map by key
+Map<String, uNI_BudgetData__c> v1ByKey = new Map<String, uNI_BudgetData__c>();
+for (uNI_BudgetData__c r : [
+    SELECT Id, uNI_PortfolioOutput__c, uNI_Summary_Budget__c, uNI_Years__c,
+           uNI_ExpenseGroup__c, uNI_ExpenseType__c, uNI_Activity__c, uNI_SubActivity__c,
+           uNI_Custom1Text__c, uNI_Custom2Text__c, uNI_Custom3Text__c,
+           uNI_Custom4Perc__c, uNI_Custom5Perc__c, uNI_Custom6Perc__c,
+           uNI_Custom7US__c, uNI_Custom8US__c, uNI_Custom9US__c,
+           uNI_Custom10Num__c, uNI_Custom11Num__c, uNI_Custom12Num__c
+    FROM uNI_BudgetData__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :v1
+]) {
+    String key = String.valueOf(r.uNI_PortfolioOutput__c) + '|' +
+                 String.valueOf(r.uNI_Summary_Budget__c) + '|' +
+                 String.valueOf(r.uNI_Years__c) + '|' +
+                 String.valueOf(r.uNI_ExpenseGroup__c) + '|' +
+                 String.valueOf(r.uNI_ExpenseType__c) + '|' +
+                 String.valueOf(r.uNI_Activity__c) + '|' +
+                 String.valueOf(r.uNI_SubActivity__c);
+    if (!v1ByKey.containsKey(key)) v1ByKey.put(key, r);
+}
+
+// Update v2 rows where custom fields are blank
+List<uNI_BudgetData__c> updates = new List<uNI_BudgetData__c>();
+for (uNI_BudgetData__c r : [
+    SELECT Id, uNI_PortfolioOutput__c, uNI_Summary_Budget__c, uNI_Years__c,
+           uNI_ExpenseGroup__c, uNI_ExpenseType__c, uNI_Activity__c, uNI_SubActivity__c,
+           uNI_Custom1Text__c, uNI_Custom2Text__c, uNI_Custom3Text__c,
+           uNI_Custom4Perc__c, uNI_Custom5Perc__c, uNI_Custom6Perc__c,
+           uNI_Custom7US__c, uNI_Custom8US__c, uNI_Custom9US__c,
+           uNI_Custom10Num__c, uNI_Custom11Num__c, uNI_Custom12Num__c
+    FROM uNI_BudgetData__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :v2
+]) {
+    String key = String.valueOf(r.uNI_PortfolioOutput__c) + '|' +
+                 String.valueOf(r.uNI_Summary_Budget__c) + '|' +
+                 String.valueOf(r.uNI_Years__c) + '|' +
+                 String.valueOf(r.uNI_ExpenseGroup__c) + '|' +
+                 String.valueOf(r.uNI_ExpenseType__c) + '|' +
+                 String.valueOf(r.uNI_Activity__c) + '|' +
+                 String.valueOf(r.uNI_SubActivity__c);
+
+    if (!v1ByKey.containsKey(key)) continue;
+    uNI_BudgetData__c src = v1ByKey.get(key);
+
+    Boolean changed = false;
+    uNI_BudgetData__c u = new uNI_BudgetData__c(Id = r.Id);
+
+    for (String f : customFields) {
+        if (r.get(f) == null && src.get(f) != null) {
+            u.put(f, src.get(f));
+            changed = true;
+        }
+    }
+    if (changed) updates.add(u);
+}
+
+System.debug('Custom fields update rows: ' + updates.size());
+if (!updates.isEmpty()) update updates;
+```
+
+---
+
+If you want a **single script** again, I can shrink it further, but two runs avoids the 431 error.
+
+---
+
+
+**OpenAI Codex**
+
+Added brief documentation comments to all clone Apex classes so future devs know they’re invocable helpers used by the Reprogramming flows.
+
+Files updated:
+- `force-app/main/default/classes/uNI_CloneLogframe.cls`
+- `force-app/main/default/classes/uNI_CloneBudgetData.cls`
+- `force-app/main/default/classes/uNI_CloneBudgetSourcesOfFunding.cls`
+- `force-app/main/default/classes/uNI_CloneCoFunding.cls`
+- `force-app/main/default/classes/uNI_CloneForeignExchangeRates.cls`
+- `force-app/main/default/classes/uNI_CloneMilestone.cls`
+- `force-app/main/default/classes/uNI_CloneStaffAllocations.cls`
+
+Want me to run any quick checks or update `package.unichat.xml` to include these if you’re deploying?
+
+---
+
+
+**User**
+
+add them to the package.xml file
+
+---
+
+
+**OpenAI Codex**
+
+Updated `manifest/package.unichat.xml` to include all the clone classes:
+- `uNI_CloneBudgetSourcesOfFunding`
+- `uNI_CloneCoFunding`
+- `uNI_CloneForeignExchangeRates`
+- `uNI_CloneMilestone`
+- `uNI_CloneStaffAllocations`
+
+Anything else you want included before deployment?
+
+---
+
+
+**User**
+
+force-app\main\default\classes\uNI_CloneBudgetData.cls  Invalid bind expression type of APEX_OBJECT for column of type String (78:51)
+force-app\main\default\classes\uNI_CloneBudgetData.cls  Invalid bind expression type of APEX_OBJECT for column of type String (85:54)
+
+---
+
+
+**OpenAI Codex**
+
+Fixed the compile error in `uNI_CloneBudgetData.cls`.
+
+Cause: the `uNI_PortfolioOutput__c` queries were binding **Object** values into a **String** field.  
+Fix: switched to **String** version values in `buildOutputIdMap` so the binds match the field type.
+
+You can re‑compile now.
+
+---
+
+
+**OpenAI Codex**
+
+<permissions instructions>Filesystem sandboxing defines which files can be read or written. `sandbox_mode` is `read-only`: The sandbox only permits reading files. Network access is restricted. Approvals are your mechanism to get user consent to run shell commands without the sandbox. `approval_policy` is `on-request`: Commands will be run in the sandbox by default, and you can specify in your tool call if you want to escalate a command to run without sandboxing. If the completing the task requires escalated permissions, Do not let these settings or the sandbox deter you from attempting to accomplish the user's task.
+
+Here are scenarios where you'll need to request approval:
+- You need to run a command that writes to a directory that requires it (e.g. running tests that write to /var)
+- You need to run a GUI app (e.g., open/xdg-open/osascript) to open browsers or files.
+- You are running sandboxed and need to run a command that requires network access (e.g. installing packages)
+- If you run a command that is important to solving the user's query, but it fails because of sandboxing, rerun the command with approval. ALWAYS proceed to use the `sandbox_permissions` and `justification` parameters - do not message the user before requesting approval for the command.
+- You are about to take a potentially destructive action such as an `rm` or `git reset` that the user did not explicitly ask for.
+
+When requesting approval to execute a command that will require escalated privileges:
+  - Provide the `sandbox_permissions` parameter with the value `"require_escalated"`
+  - Include a short, 1 sentence explanation for why you need escalated permissions in the justification parameter</permissions instructions>
+
+---
+
+
+**OpenAI Codex**
+
+<permissions instructions>Filesystem sandboxing defines which files can be read or written. `sandbox_mode` is `danger-full-access`: No filesystem sandboxing - all commands are permitted. Network access is enabled. Approvals are your mechanism to get user consent to run shell commands without the sandbox. `approval_policy` is `never`: This is a non-interactive mode where you may NEVER ask the user for approval to run commands. Instead, you must always persist and work around constraints to solve the task for the user. You MUST do your utmost best to finish the task and validate your work before yielding. If this mode is paired with `danger-full-access`, take advantage of it to deliver the best outcome for the user. Further, in this mode, your default testing philosophy is overridden: Even if you don't see local patterns for testing, you may add tests and scripts to validate your work. Just remove them before yielding.</permissions instructions>
+
+---
+
+
+**OpenAI Codex**
+
+<permissions instructions>Filesystem sandboxing defines which files can be read or written. `sandbox_mode` is `danger-full-access`: No filesystem sandboxing - all commands are permitted. Network access is enabled. Approvals are your mechanism to get user consent to run shell commands without the sandbox. `approval_policy` is `never`: This is a non-interactive mode where you may NEVER ask the user for approval to run commands. Instead, you must always persist and work around constraints to solve the task for the user. You MUST do your utmost best to finish the task and validate your work before yielding. If this mode is paired with `danger-full-access`, take advantage of it to deliver the best outcome for the user. Further, in this mode, your default testing philosophy is overridden: Even if you don't see local patterns for testing, you may add tests and scripts to validate your work. Just remove them before yielding.</permissions instructions>
+
+---
+
+
+**User**
+
+ok so there is a new condition, in the uNI_Create_Annual_Report_1flow, 
+ok so there is a new condition, in the uNI_Create_Annual_Report_1 flow, basically, whenever there is a reprogramming request present 
+for an individual application before. we have to take the reprogrammed budget, logframe , and all the related things for the annual report. 
+the rule is, if there is a approved reprogramming present before the June 1 cutoff date of that particular year - i will have to use that reprogrammed budget, and if the reprogramming was after June 1 date(this date can be changed), basically what i was thinking that we will create a apex action that will fetch reprogramming requests for a individualapplication that is approved for that reporting year before the cutoff date, if a approved reprogramming request is present before the cutoff date, return the logframe version of that reprogramming request. and if there are no reprogramming request that satisfy this condition return 0. 
+
+is this possible?
+
+---
+
+
+**OpenAI Codex**
+
+Implemented the new “approved reprogramming before cutoff” logic with an Apex action and wired it into `uNI_Create_Annual_Report_1` so the annual report uses the correct logframe version for cloning.
+
+What I changed
+- Added Apex invocable: `uNI_AnnualReportReprogrammingSelector`
+  - Returns `logframeVersion`, `reprogrammingRequestId`, and `reprogrammingRequestName`
+  - Uses cutoff date (defaults to June 1 of the report year if not provided)
+- Updated flow `uNI_Create_Annual_Report_1.flow-meta.xml`
+  - Replaced record lookup `get_Reprogramming_requests` with Apex action call
+  - Decision now checks `logframeVersion != "0"`
+  - Added formulas:
+    - `ARCutoffDate = DATE(SelectedReportYearNumber, 6, 1)`
+    - `SelectedLogframeVersionForAR = IF(logframeVersion="0", IA version, logframeVersion)`
+  - Budget clone action uses `SelectedLogframeVersionForAR`
+  - Update Annual Report uses `get_Reprogramming_requests.logframeVersion` and `reprogrammingRequestId`
+  - Screen text now uses `reprogrammingRequestName`
+
+Files updated/added
+- `force-app/main/default/classes/uNI_AnnualReportReprogrammingSelector.cls`
+- `force-app/main/default/flows/uNI_Create_Annual_Report_1.flow-meta.xml`
+- `manifest/package.unichat.xml`
+
+Note: I kept `Create_Annual_Report` itself using IA’s logframe version (unchanged), since the action runs after creation and the update step corrects it when needed.
+
+If you want the cutoff date to be configurable (not hardcoded to June 1), tell me where you want to store it (custom metadata, custom setting, field on IA/AR), and I’ll wire that in.
+
+---
+
+
+**User**
+
+the cuttoff date can be stored in the flow is that possible?
+
+---
+
+
+**OpenAI Codex**
+
+Yes, totally possible. We can keep the cutoff date **as a Flow variable/formula** (no Apex or metadata needed). 
+
+Two options inside the flow:
+1) **Formula (current setup):** `ARCutoffDate = DATE(SelectedReportYearNumber, 6, 1)`  
+2) **Flow variable:** create a Date variable like `CutoffDate`, set it from a Screen input or Assignment, then pass it to the Apex action.
+
+If you want it editable each run, I can add a **screen input**.  
+If you want it fixed but still in flow, I can set a **default value** in an Assignment.
+
+Tell me which option you want.
+
+---
+
+
+**User**
+
+formula is fine, just add the desicription to it
+
+---
+
+
+**OpenAI Codex**
+
+Added the description to the `ARCutoffDate` formula in `force-app/main/default/flows/uNI_Create_Annual_Report_1.flow-meta.xml`.
+
+If you want a different wording, tell me and I’ll tweak it.
+
+---
+
+
+**User**
+
+Component conversion failed: File not found: \force-app\main\default\classes\uNI_AnnualReportReprogrammingSelector.cls-meta.xml
+
+---
+
+
+**OpenAI Codex**
+
+Created the missing metadata file:
+
+`force-app/main/default/classes/uNI_AnnualReportReprogrammingSelector.cls-meta.xml`
+
+You should be able to deploy now.
+
+---
+
+
+**User**
+
+how can i test this class for an indiviudal application, ?
+
+---
+
+
+**OpenAI Codex**
+
+You can test it with **Execute Anonymous** (Dev Console / VS Code “Execute Anonymous”) using a real IA Id and report year.
+
+Example:
+
+```apex
+Id iaId = '0iTFT00000004212AA';
+String reportYear = '2025';
+Date cutoff = Date.newInstance(2025, 6, 1); // same as flow formula
+
+uNI_AnnualReportReprogrammingSelector.Request req =
+    new uNI_AnnualReportReprogrammingSelector.Request();
+req.individualApplicationId = iaId;
+req.reportYear = reportYear;
+req.cutoffDate = cutoff;
+
+List<uNI_AnnualReportReprogrammingSelector.Response> res =
+    uNI_AnnualReportReprogrammingSelector.run(new List<uNI_AnnualReportReprogrammingSelector.Request>{ req });
+
+System.debug('LogframeVersion = ' + res[0].logframeVersion);
+System.debug('RR Id = ' + res[0].reprogrammingRequestId);
+System.debug('RR Name = ' + res[0].reprogrammingRequestName);
+System.debug('Approved Date = ' + res[0].approvedDate);
+```
+
+Expected result:
+- If a qualifying approved RR exists before cutoff → `logframeVersion` is that RR version.
+- If none → `logframeVersion = "0"`.
+
+If you want, share the IA id + report year and I can run the query locally and tell you what it returns.
+
+---
+
+
+**User**
+
+what is happening if there are multiple approved reprogramming requests present that satisfies the condition?
+
+---
+
+
+**OpenAI Codex**
+
+It picks **the most recent approved reprogramming request before the cutoff**.
+
+In the Apex action, the SOQL uses:
+- `ORDER BY uNI_ApprovedDate__c DESC`
+- `LIMIT 1`
+
+So if multiple RR records satisfy the condition, it returns the one with the **latest Approved Date** (closest to the cutoff).
+
+---
+
+
+**User**
+
+please add the nessasary comments so that its easier for me to read when i get back to it later.
+
+---
+
+
+**OpenAI Codex**
+
+Added clear comments to `uNI_AnnualReportReprogrammingSelector.cls` explaining the business rule, default behavior, and how the “latest before cutoff” selection works.
+
+If you want similar comments in the flow XML (like a brief description on the action/formula), I can add those too.
+
+---
+
+
+**User**
+
+can you please remove all the screen headers in the  uNI_Create_Annual_Report_1 flow , also remove the previous and pause buttons from the footer.
+
+---
+
+
+**OpenAI Codex**
+
+Removed all screen headers and disabled Previous/Pause across the flow by setting:
+- `<showHeader>false</showHeader>`
+- `<allowBack>false</allowBack>`
+- `<allowPause>false</allowPause>`
+
+Applied in `force-app/main/default/flows/uNI_Create_Annual_Report_1.flow-meta.xml`.
+
+If you want to keep Pause on any specific screen, tell me which one and I’ll restore it.
+
+---

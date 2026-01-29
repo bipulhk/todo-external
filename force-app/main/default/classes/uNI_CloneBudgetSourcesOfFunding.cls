@@ -1,3 +1,7 @@
+/**
+ * Invocable clone helper used by Reprogramming flows.
+ * Clones Budget Sources of Funding rows from source → target version.
+ */
 public with sharing class uNI_CloneBudgetSourcesOfFunding {
 
     // ===== Request / Response DTOs =====

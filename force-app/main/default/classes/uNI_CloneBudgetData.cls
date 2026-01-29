@@ -11,6 +11,11 @@
 * 1.0 | November 20, 2025 |   | Initial Version
 **/
 
+/**
+ * Invocable clone helper used by Create/Return Reprogramming flows.
+ * Clones Summary Budgets, Expense Types, and Budget Data rows from source → target version,
+ * and remaps Budget Data to the new versioned Outputs.
+ */
 public with sharing class uNI_CloneBudgetData {
 
     // ===== Request / Response DTOs =====
@@ -55,6 +60,61 @@ public with sharing class uNI_CloneBudgetData {
     // ===== Helper models =====
     private class CloneContext {
         Map<Id, Id> summaryBudgetMap = new Map<Id, Id>();
+    }
+
+    private static Map<Id, Id> buildOutputIdMap(Id indAppId,
+                                                String sourceVersion,
+                                                String targetVersion) {
+        Map<Id, Id> result = new Map<Id, Id>();
+        if (indAppId == null || String.isBlank(sourceVersion) || String.isBlank(targetVersion)) {
+            return result;
+        }
+
+        String sourceVersionValue = sourceVersion.trim();
+        String targetVersionValue = targetVersion.trim();
+
+        List<uNI_PortfolioOutput__c> srcOutputs = [
+            SELECT Id, uNI_InternalSequence__c, uNI_OutputTitle__c, uNI_Version__c
+            FROM uNI_PortfolioOutput__c
+            WHERE uNI_IndividualApplication__c = :indAppId
+              AND uNI_Version__c = :sourceVersionValue
+        ];
+
+        List<uNI_PortfolioOutput__c> targetOutputs = [
+            SELECT Id, uNI_InternalSequence__c, uNI_OutputTitle__c, uNI_Version__c
+            FROM uNI_PortfolioOutput__c
+            WHERE uNI_IndividualApplication__c = :indAppId
+              AND uNI_Version__c = :targetVersionValue
+        ];
+
+        Map<String, Id> targetBySeq = new Map<String, Id>();
+        Map<String, Id> targetByTitle = new Map<String, Id>();
+        for (uNI_PortfolioOutput__c t : targetOutputs) {
+            if (t.uNI_InternalSequence__c != null) {
+                targetBySeq.put(String.valueOf(t.uNI_InternalSequence__c), t.Id);
+            }
+            if (t.uNI_OutputTitle__c != null) {
+                String key = t.uNI_OutputTitle__c.trim().toLowerCase();
+                if (!targetByTitle.containsKey(key)) {
+                    targetByTitle.put(key, t.Id);
+                }
+            }
+        }
+
+        for (uNI_PortfolioOutput__c s : srcOutputs) {
+            Id targetId;
+            if (s.uNI_InternalSequence__c != null) {
+                targetId = targetBySeq.get(String.valueOf(s.uNI_InternalSequence__c));
+            }
+            if (targetId == null && s.uNI_OutputTitle__c != null) {
+                targetId = targetByTitle.get(s.uNI_OutputTitle__c.trim().toLowerCase());
+            }
+            if (targetId != null) {
+                result.put(s.Id, targetId);
+            }
+        }
+
+        return result;
     }
 
     private static Object normalizeVersionValue(String version, Schema.SObjectField fld) {
@@ -143,6 +203,7 @@ public with sharing class uNI_CloneBudgetData {
             SELECT Id,
                    Name,
                    is_Full_Row_Span__c,
+                   uNI_Investment_record_type__c,
                    uNI_IndividualApplication__c,
                    uNI_CallForProposals__c,
                    Expense_type__c,
@@ -277,6 +338,9 @@ public with sharing class uNI_CloneBudgetData {
             return count;
         }
 
+        Map<Id, Id> outputIdMap =
+            buildOutputIdMap(req.individualApplicationId, sourceVersion, req.targetVersion);
+
         List<uNI_BudgetData__c> src = [
             SELECT Id,
                    uNI_PortfolioOutput__c,
@@ -308,6 +372,18 @@ public with sharing class uNI_CloneBudgetData {
                    uNI_CostAllocatedToCofunding__c,
                    uNI_CostTotalUnitaidUS__c,
                    uNI_CostTotalCoFundingUS__c,
+                   uNI_Custom1Text__c,
+                   uNI_Custom2Text__c,
+                   uNI_Custom3Text__c,
+                   uNI_Custom4Perc__c,
+                   uNI_Custom5Perc__c,
+                   uNI_Custom6Perc__c,
+                   uNI_Custom7US__c,
+                   uNI_Custom8US__c,
+                   uNI_Custom9US__c,
+                   uNI_Custom10Num__c,
+                   uNI_Custom11Num__c,
+                   uNI_Custom12Num__c,
                    uNI_Version__c
             FROM uNI_BudgetData__c
             WHERE uNI_IndividualApplication__c = :req.individualApplicationId
@@ -331,6 +407,11 @@ public with sharing class uNI_CloneBudgetData {
             if (bd.uNI_Summary_Budget__c != null &&
                 ctx.summaryBudgetMap.containsKey(bd.uNI_Summary_Budget__c)) {
                 copy.uNI_Summary_Budget__c = ctx.summaryBudgetMap.get(bd.uNI_Summary_Budget__c);
+            }
+
+            if (bd.uNI_PortfolioOutput__c != null &&
+                outputIdMap.containsKey(bd.uNI_PortfolioOutput__c)) {
+                copy.uNI_PortfolioOutput__c = outputIdMap.get(bd.uNI_PortfolioOutput__c);
             }
 
             clones.add(copy);

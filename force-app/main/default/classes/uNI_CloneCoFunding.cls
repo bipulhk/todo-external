@@ -11,6 +11,7 @@
 * 1.0 | November 14, 2025 |   | Initial Version
 **/
 
+// Invocable clone helper used by Create/Return Reprogramming flows.
 public with sharing class uNI_CloneCoFunding {
 
     // ===== Request / Response DTOs =====

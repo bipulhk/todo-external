@@ -11,6 +11,7 @@
 * 1.0 | November 21, 2025 |   | Initial Version
 **/
 
+// Invocable clone helper used by Create/Return Reprogramming flows.
 public with sharing class uNI_CloneMilestone {
 
     public class Request {

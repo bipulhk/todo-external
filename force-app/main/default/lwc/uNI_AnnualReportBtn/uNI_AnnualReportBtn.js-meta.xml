@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>63.0</apiVersion>
+    <isExposed>true</isExposed>
+
+    <targets>
+        <!-- Experience Cloud -->
+        <target>lightningCommunity__Default</target>
+        <target>lightningCommunity__Page</target>
+
+        <!-- Standard Lightning Pages -->
+        <target>lightning__RecordPage</target>
+        <target>lightning__AppPage</target>
+        <target>lightning__HomePage</target>
+    </targets>
+
+    <targetConfigs>
+        <!-- Record Page -->
+        <targetConfig targets="lightning__RecordPage">
+            <objects>
+                <object>uNI_Annual_Report__c</object>
+            </objects>
+            <property name="buttonLabel" type="String" label="Button Label" />
+            <property name="buttonVariant" type="String" label="Button Variant (e.g., brand, neutral, destructive)" />
+            <property name="flowApiName" type="String" label="Flow API Name" description="API name of the Flow to run" />
+            <property name="modalTitle" type="String" label="Modal Title" />
+            <property name="flashFlowApiNamePrimary" type="String" label="Flash Flow API Name (Primary)" />
+            <property name="flashFlowApiNameSecondary" type="String" label="Flash Flow API Name (Secondary)" />
+            <property name="flashButtonLabelPrimary" type="String" label="Flash Button Label (Primary)" />
+            <property name="flashButtonLabelSecondary" type="String" label="Flash Button Label (Secondary)" />
+        </targetConfig>
+
+        <!-- App/Home Pages -->
+        <targetConfig targets="lightning__AppPage, lightning__HomePage">
+            <property name="recordId" type="String" label="Record ID" description="Pass the Annual Report record Id manually if not on a record page" />
+            <property name="buttonLabel" type="String" label="Button Label" />
+            <property name="buttonVariant" type="String" label="Button Variant (e.g., brand, neutral, destructive)" />
+            <property name="flowApiName" type="String" label="Flow API Name" description="API name of the Flow to run" />
+            <property name="modalTitle" type="String" label="Modal Title" />
+            <property name="flashFlowApiNamePrimary" type="String" label="Flash Flow API Name (Primary)" />
+            <property name="flashFlowApiNameSecondary" type="String" label="Flash Flow API Name (Secondary)" />
+            <property name="flashButtonLabelPrimary" type="String" label="Flash Button Label (Primary)" />
+            <property name="flashButtonLabelSecondary" type="String" label="Flash Button Label (Secondary)" />
+        </targetConfig>
+        <targetConfig targets="lightningCommunity__Default">
+            <property name="recordId" type="String" label="Record ID" description="Pass the Annual Report record Id if not on a record page" />
+            <property name="buttonLabel" type="String" label="Button Label" />
+            <property name="buttonVariant" type="String" label="Button Variant (e.g., brand, neutral, destructive)" />
+            <property name="flowApiName" type="String" label="Flow API Name" description="API name of the Flow to run" />
+            <property name="modalTitle" type="String" label="Modal Title" />
+            <property name="flashFlowApiNamePrimary" type="String" label="Flash Flow API Name (Primary)" />
+            <property name="flashFlowApiNameSecondary" type="String" label="Flash Flow API Name (Secondary)" />
+            <property name="flashButtonLabelPrimary" type="String" label="Flash Button Label (Primary)" />
+            <property name="flashButtonLabelSecondary" type="String" label="Flash Button Label (Secondary)" />
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

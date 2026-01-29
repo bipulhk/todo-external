@@ -1,3 +1,7 @@
+/**
+ * Invocable clone helper used by Reprogramming flows.
+ * Clones Foreign Exchange Rate rows from source → target version.
+ */
 public with sharing class uNI_CloneForeignExchangeRates {
 
     // ===== Request & Response DTOs =====

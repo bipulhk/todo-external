@@ -3,6 +3,12 @@
     <types>
         <members>uNI_CloneLogframe</members>
         <members>uNI_CloneBudgetData</members>
+        <members>uNI_CloneBudgetSourcesOfFunding</members>
+        <members>uNI_CloneCoFunding</members>
+        <members>uNI_CloneForeignExchangeRates</members>
+        <members>uNI_CloneMilestone</members>
+        <members>uNI_CloneStaffAllocations</members>
+        <members>uNI_AnnualReportReprogrammingSelector</members>
         <members>uNI_BudgetDataController</members>
         <members>uNI_BudgetOverviewController</members>
         <members>uNI_LogframeController</members>

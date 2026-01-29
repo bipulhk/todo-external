@@ -1,0 +1,25 @@
+<template>
+  <div class="container">
+
+    <footer class="tabs-footer">
+      <template for:each={tabs} for:item="tab">
+        <button
+          key={tab.id}
+          class={tab.cssClass}
+          onclick={handleTabClick}
+          data-id={tab.id}
+          title={tab.label}
+        >
+          {tab.label}
+        </button>
+      </template>
+    </footer>
+    <br>
+    <div class="content-area">
+      <template if:true={activeTab}>
+        <c-u-n-i-dynamic-lwc-loader lwc-name={activeTab.lwcName} lwc-params={activeTab.recordId}></c-u-n-i-dynamic-lwc-loader >
+      </template>
+    </div>
+
+  </div>
+</template>
