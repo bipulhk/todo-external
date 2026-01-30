@@ -1,4 +1,4 @@
-public with sharing class uNI_CreateExpensesForAnnualReport {
+public without sharing class uNI_CreateExpensesForAnnualReport {
     private static final List<String> DEFAULT_GROUPS = new List<String>{
         'Health commodities and health equipment',
         'Procurement and supply chain',

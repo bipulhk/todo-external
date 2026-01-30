@@ -1,0 +1,171 @@
+<template>
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+    </template>
+
+    <template if:true={dataLoaded}>
+        <div class="slds-box slds-theme_default slds-m-bottom_medium">
+            <!-- Dynamic Title -->
+            <div class="slds-text-heading_small slds-m-bottom_small">
+                <strong>Table 2. Fund statement by year (Year : {yearLabel})</strong>
+            </div>
+
+            <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_fixed-layout">
+                <thead>
+                    <tr class="slds-line-height_reset">
+                        <th class="" scope="col" style="width: 50%;">
+                            <div class="slds-truncate" title="Description"></div>
+                        </th>
+                        <th class="slds-text-align_right slds-cell-buffer_right" scope="col">
+                            <div class="slds-truncate" title="Total"><strong>Total</strong></div>
+                        </th>
+                        <th class="slds-text-align_right slds-cell-buffer_right" scope="col">
+                            <div class="slds-truncate" title="Year"><strong>{yearLabel}</strong></div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Funds Received Row (Calculated Sum) -->
+                    <tr class="slds-hint-parent slds-theme_shade">
+                        <td>
+                            <div class="slds-truncate"><strong>Funds received from Unitaid during year</strong></div>
+                        </td>
+                        <td class="slds-text-align_right">
+                            <strong><lightning-formatted-number value={totalIncome} format-style="currency" currency-code="USD"></lightning-formatted-number></strong>
+                        </td>
+                        <td class="slds-text-align_right">
+                            <strong><lightning-formatted-number value={totalIncome} format-style="currency" currency-code="USD"></lightning-formatted-number></strong>
+                        </td>
+                    </tr>
+                    
+                    <!-- Dynamic Disbursement Rows -->
+                    <template for:each={disbursements} for:item="disb" for:index="index">
+                        <tr key={disb.Id}>
+                            <td>
+                                <div class="slds-truncate">{disb.label}</div>
+                            </td>
+                            <td class="hashed-cell"></td>
+                            <td>
+                                <lightning-input 
+                                    type="number" 
+                                    variant="label-hidden" 
+                                    formatter="currency" 
+                                    step="0.01" 
+                                    value={disb.amount} 
+                                    data-id={disb.Id}
+                                    onchange={handleDisbursementChange}>
+                                </lightning-input>
+                            </td>
+                        </tr>
+                    </template>
+
+                    <!-- Interest Income -->
+                    <tr>
+                        <td>
+                            <div class="slds-truncate">Interest income</div>
+                        </td>
+                        <td class="hashed-cell"></td>
+                        <td>
+                            <lightning-input 
+                                type="number" 
+                                variant="label-hidden" 
+                                formatter="currency" 
+                                step="0.01" 
+                                value={annualReport.uNI_Interest_income__c} 
+                                data-field="uNI_Interest_income__c"
+                                onchange={handleArChange}>
+                            </lightning-input>
+                        </td>
+                    </tr>
+
+                    <!-- Other Income -->
+                    <tr>
+                        <td>
+                            <div class="slds-truncate">Other income (including ERC fees)</div>
+                        </td>
+                        <td class="hashed-cell"></td>
+                        <td>
+                            <lightning-input 
+                                type="number" 
+                                variant="label-hidden" 
+                                formatter="currency" 
+                                step="0.01" 
+                                value={annualReport.uNI_Other_income_including_ERC_fees__c} 
+                                data-field="uNI_Other_income_including_ERC_fees__c"
+                                onchange={handleArChange}>
+                            </lightning-input>
+                        </td>
+                    </tr>
+
+                    <!-- Funds Expended Row -->
+                    <tr class="slds-hint-parent slds-theme_shade">
+                        <td>
+                            <div class="slds-truncate"><strong>Funds expended during year</strong></div>
+                        </td>
+                        <td class="slds-text-align_right">
+                            <strong><lightning-formatted-number value={totalExpended} format-style="currency" currency-code="USD"></lightning-formatted-number></strong>
+                        </td>
+                        <td class="slds-text-align_right">
+                            <strong><lightning-formatted-number value={totalExpended} format-style="currency" currency-code="USD"></lightning-formatted-number></strong>
+                        </td>
+                    </tr>
+
+                    <!-- Grant Expenses -->
+                    <tr>
+                        <td>
+                            <div class="slds-truncate">Grant expenses (including ERC fees)</div>
+                        </td>
+                        <td class="hashed-cell"></td>
+                        <td class="orange-cell">
+                            <lightning-input 
+                                type="number" 
+                                variant="label-hidden" 
+                                formatter="currency" 
+                                step="0.01" 
+                                value={annualReport.uNI_Grant_expenses_including_ERC_fees__c} 
+                                data-field="uNI_Grant_expenses_including_ERC_fees__c"
+                                onchange={handleArChange}>
+                            </lightning-input>
+                        </td>
+                    </tr>
+
+                    <!-- Other funds out -->
+                    <tr>
+                        <td>
+                            <div class="slds-truncate">Other funds out (e.g. prepayment)</div>
+                        </td>
+                        <td class="hashed-cell"></td>
+                        <td class="orange-cell">
+                            <lightning-input 
+                                type="number" 
+                                variant="label-hidden" 
+                                formatter="currency" 
+                                step="0.01" 
+                                value={annualReport.uNI_Other_funds_out__c} 
+                                data-field="uNI_Other_funds_out__c"
+                                onchange={handleArChange}>
+                            </lightning-input>
+                        </td>
+                    </tr>
+
+                    <!-- Footer: Funds Available -->
+                    <tr class="slds-theme_shade">
+                        <td>
+                            <div class="slds-truncate"><strong>Funds available at end of year*</strong></div>
+                        </td>
+                        <td class="slds-text-align_right">
+                            <strong><lightning-formatted-number value={fundsAvailable} format-style="currency" currency-code="USD"></lightning-formatted-number></strong>
+                        </td>
+                        <td class="slds-text-align_right">
+                            <strong><lightning-formatted-number value={fundsAvailable} format-style="currency" currency-code="USD"></lightning-formatted-number></strong>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="slds-m-top_small slds-text-align_right">
+                <lightning-button variant="brand" label="Save" onclick={handleSave} disabled={isSaving}></lightning-button>
+            </div>
+        </div>
+    </template>
+</template>

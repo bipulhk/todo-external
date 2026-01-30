@@ -1,0 +1,7 @@
+table lightning-input { min-width: 140px; }
+.slds-table th, .slds-table td { min-width: 120px; }
+
+.debug-value {
+    font-size: 10px;
+    color: #888;
+}

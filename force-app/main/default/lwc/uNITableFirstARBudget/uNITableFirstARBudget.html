@@ -1,0 +1,45 @@
+<template>
+    <lightning-card title="Table 1. Key financial information">
+        <template if:true={dataLoaded}>
+            <table class="slds-table slds-table_bordered slds-m-top_small">
+                <thead>
+                    <tr class="slds-text-title_caps">
+                        <th>Key financial information</th>
+                        <th>Amount (US$)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Grant value/ceiling</td>
+                        <td>${grantValue}</td>
+                    </tr>
+                    <tr>
+                        <td>Total funds received (Dec 31, 2023)</td>
+                        <td>${totalFundsReceived}</td>
+                    </tr>
+                    <tr>
+                        <td>Any funds received (after reporting period)</td>
+                        <td>
+                            $<lightning-input type="number" value={anyFundsReceived} onchange={handleFundsChange}
+                                class="input-inline">
+                            </lightning-input>
+                        </td>
+                    </tr>
+
+
+                    <tr>
+                        <td><strong>Balance</strong></td>
+                        <td><strong>${balance}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <lightning-button variant="brand" class="slds-m-top_medium" label="Save" onclick={handleSave}>
+            </lightning-button>
+        </template>
+
+        <template if:false={dataLoaded}>
+            <lightning-spinner alternative-text="Loading"></lightning-spinner>
+        </template>
+    </lightning-card>
+</template>

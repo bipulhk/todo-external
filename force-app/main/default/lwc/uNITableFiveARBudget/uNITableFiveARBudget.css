@@ -1,0 +1,12 @@
+.custom-container{
+	color : black;
+}
+
+table lightning-input {
+    min-width: 140px;
+}
+
+.slds-table th,
+.slds-table td {
+    min-width: 120px;
+}

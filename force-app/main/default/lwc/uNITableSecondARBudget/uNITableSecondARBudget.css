@@ -1,0 +1,20 @@
+.hashed-cell {
+    background: repeating-linear-gradient(
+        45deg,
+        #f3f3f3,
+        #f3f3f3 10px,
+        #e0e0e0 10px,
+        #e0e0e0 20px
+    );
+}
+
+.orange-cell {
+    background-color: #e0e0e0 20px
+; 
+    /* Orange color to match screenshot for expenses */
+}
+
+/* Override input transparency for the orange cells if needed */
+.orange-cell lightning-input {
+    --slds-c-input-color-background: rgba(255,255,255,0.9);
+}

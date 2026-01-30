@@ -1,0 +1,142 @@
+<template>
+  <lightning-card title="Table 5 - By expense group and year">
+    <div class="slds-p-around_small">
+      <template if:true={loading}>
+        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+      </template>
+      <template if:true={error}>
+        <div class="slds-text-color_error slds-m-bottom_small">{error}</div>
+      </template>
+
+      <template if:true={hasData}>
+        <div class="slds-scrollable_x">
+          <table class="slds-table slds-table_bordered slds-table_cell-buffer" role="grid">
+            <thead>
+              <tr>
+                <th rowspan="2" class="slds-text-title_caps">Expense group</th>
+                <template for:each={columns} for:item="col">
+                  <th key={col.key} colspan="4" class="slds-text-align_center">{col.label}</th>
+                </template>
+                <th colspan="4" class="slds-text-align_center">Cross-cutting</th>
+                <th colspan="4" class="slds-text-align_center">{yearLabel}</th>
+              </tr>
+              <tr>
+                <template for:each={columns} for:item="col">
+                  <th key={col.budgetKey}>Budget</th>
+                  <th key={col.actualKey}>Actual</th>
+                  <th key={col.varianceKey}>Variance</th>
+                  <th key={col.pctKey}>% implemented</th>
+                </template>
+                <th>Budget</th>
+                <th>Actual</th>
+                <th>Variance</th>
+                <th>% implemented</th>
+
+                <th>Budget</th>
+                <th>Actual</th>
+                <th>Variance</th>
+                <th>% implemented</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template for:each={table.rows} for:item="row">
+                <tr key={row.key}>
+                  <th scope="row">{row.name}</th>
+                  <template for:each={row.outputs} for:item="cell">
+                    <td key={cell.keyBudget}>
+                      <lightning-formatted-number value={cell.budget} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                    </td>
+                    <td key={cell.keyActual}>
+                      <lightning-input type="number" formatter="currency" value={cell.actual} data-rec-id={row.recId} data-row-key={row.key} data-output={cell.index} data-api={cell.actualApi} onchange={handleActualChange} disabled={isReadOnly}></lightning-input>
+                    </td>
+                    <td key={cell.keyVar}>
+                      <lightning-formatted-number value={cell.variance} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                    </td>
+                    <td key={cell.keyPct}>{cell.pct}</td>
+                  </template>
+
+                  <td>
+                    <lightning-formatted-number value={row.cross.budget} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                  </td>
+                  <td>
+                    <lightning-input type="number" formatter="currency" value={row.cross.actual} data-rec-id={row.recId} data-row-key={row.key} data-output="cross" data-api={row.cross.actualApi} onchange={handleActualChange} disabled={isReadOnly}></lightning-input>
+                  </td>
+                  <td>
+                    <lightning-formatted-number value={row.cross.variance} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                  </td>
+                  <td>{row.cross.pct}</td>
+
+                  <td>
+                    <lightning-formatted-number value={row.total.budget} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                  </td>
+                  <td>
+                    <lightning-formatted-number value={row.total.actual} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                  </td>
+                  <td>
+                    <lightning-formatted-number value={row.total.variance} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                  </td>
+                  <td>{row.total.pct}</td>
+                </tr>
+              </template>
+
+              <tr class="slds-text-title_bold">
+                <th scope="row">Total</th>
+                <template for:each={table.summaryOutputs} for:item="cell">
+                  <td key={cell.keyBudget}>
+                    <lightning-formatted-number value={cell.budget} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                  </td>
+                  <td key={cell.keyActual}>
+                    <lightning-formatted-number value={cell.actual} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                  </td>
+                  <td key={cell.keyVar}>
+                    <lightning-formatted-number value={cell.variance} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                  </td>
+                  <td key={cell.keyPct}>{cell.pct}</td>
+                </template>
+                <td>
+                  <lightning-formatted-number value={table.summaryCross.budget} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                </td>
+                <td>
+                  <lightning-formatted-number value={table.summaryCross.actual} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                </td>
+                <td>
+                  <lightning-formatted-number value={table.summaryCross.variance} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                </td>
+                <td>{table.summaryCross.pct}</td>
+
+                <td>
+                  <lightning-formatted-number value={table.summaryTotal.budget} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                </td>
+                <td>
+                  <lightning-formatted-number value={table.summaryTotal.actual} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                </td>
+                <td>
+                  <lightning-formatted-number value={table.summaryTotal.variance} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number>
+                </td>
+                <td>{table.summaryTotal.pct}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </template>
+
+      <template if:false={hasData}>
+        <div class="slds-text-align_center slds-p-vertical_medium">No expense data found.</div>
+      </template>
+
+        <div class="slds-grid slds-wrap slds-align-spread slds-m-top_medium">
+        <div>
+          <lightning-button label="Save" variant="brand" onclick={handleSave} disabled={saveDisabled}></lightning-button>
+        </div>
+        <div class="slds-text-align_right">
+          <template if:true={saveMessage}>
+            <span class="slds-text-color_success">{saveMessage}</span>
+          </template>
+          <template if:true={error}>
+            <span class="slds-text-color_error">{error}</span>
+          </template>
+        </div>
+      </div>
+    </div>
+  </lightning-card>
+</template>

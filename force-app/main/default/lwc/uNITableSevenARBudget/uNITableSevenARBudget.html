@@ -1,0 +1,72 @@
+<template>
+  <lightning-card title="Table 7 - By country and year (all years)">
+    <div class="slds-p-around_small">
+      <template if:true={loading}>
+        <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+      </template>
+
+      <template if:true={error}>
+        <div class="slds-text-color_error slds-m-bottom_small">{error}</div>
+      </template>
+
+      <template if:true={rows}>
+        <div class="slds-scrollable_x">
+          <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-m-top_small" role="grid">
+            <thead>
+              <tr>
+                <th rowspan="2"><b>Country</b></th>
+                <th colspan="4" class="slds-text-align_center"><b>Total</b></th>
+                <th colspan="4" class="slds-text-align_center"><b>{yearLabel}</b></th>
+              </tr>
+              <tr>
+                <th>Budget</th>
+                <th>Actual</th>
+                <th>Variance</th>
+                <th>% Implemented</th>
+
+                <th>Budget</th>
+                <th>Actual</th>
+                <th>Variance</th>
+                <th>% Implemented</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template for:each={rows} for:item="row">
+                <tr key={row.key}>
+                  <th scope="row">{row.label}</th>
+                  <td><lightning-formatted-number value={row.budget} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                  <td><lightning-formatted-number value={row.actual} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                  <td><lightning-formatted-number value={row.variance} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                  <td>{row.pct}</td>
+
+                  <td><lightning-formatted-number value={row.yearBudget} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                  <td><lightning-formatted-number value={row.yearActual} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                  <td><lightning-formatted-number value={row.yearVariance} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                  <td>{row.yearPct}</td>
+                </tr>
+              </template>
+            </tbody>
+            <tfoot>
+              <tr class="slds-text-title_bold">
+                <th scope="row">Total</th>
+                <td><lightning-formatted-number value={summary.budget} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                <td><lightning-formatted-number value={summary.actual} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                <td><lightning-formatted-number value={summary.variance} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                <td>{summary.pct}</td>
+
+                <td><lightning-formatted-number value={summary.budget} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                <td><lightning-formatted-number value={summary.actual} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                <td><lightning-formatted-number value={summary.variance} minimum-fraction-digits="2" maximum-fraction-digits="2"></lightning-formatted-number></td>
+                <td>{summary.pct}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </template>
+
+      <template if:false={rows}>
+        <div class="slds-text-align_center slds-p-vertical_medium">No expense data found.</div>
+      </template>
+    </div>
+  </lightning-card>
+</template>

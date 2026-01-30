@@ -1,0 +1,25 @@
+.narrativeCol {
+    min-width: 500px;
+    width: 500px !important;
+}
+
+.slds-table td.narrativeCol {
+    min-width: 500px;
+    width: 500px !important;
+}
+
+.narrativeCol lightning-textarea {
+    width: 100% !important;
+    min-width: 500px !important;
+}
+
+/* Widen numeric cells for readability */
+table lightning-input {
+    min-width: 140px;
+}
+
+/* Keep overall table from collapsing cells */
+.slds-table th,
+.slds-table td {
+    min-width: 110px;
+}
