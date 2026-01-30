@@ -98,11 +98,12 @@ export default class UNITableFourARBudget extends LightningElement {
                     this.rows = [];
                     return;
                 }
-                let outputsCount = Math.min(this.MAX_OUTPUTS, res.numberOfOutputs || 0);
-                // Fallback: derive outputs count from data if server returns 0
-                if (!outputsCount && res.expenseTypes && res.expenseTypes.length) {
+                let outputsCount = res ? res.numberOfOutputs : null;
+                // Fallback only when the server couldn't determine the count
+                if ((outputsCount === null || outputsCount === undefined) && res.expenseTypes && res.expenseTypes.length) {
                     outputsCount = this.deriveOutputsFromData(res.expenseTypes);
                 }
+                outputsCount = Math.min(this.MAX_OUTPUTS, outputsCount || 0);
 
                 this.countryNames = res.countryNames || {};
                 console.log('[Table4] outputsCount resolved:', outputsCount, 'controller:', res.numberOfOutputs);

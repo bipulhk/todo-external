@@ -66,6 +66,7 @@ public with sharing class uNI_TableFiveARBudgetController {
 
         ResultWrapper res = new ResultWrapper();
 
+        Id disbIndId;
         // Fetch disbursement to get the year
         try {
             uNI_PPF__c disb = [
@@ -76,6 +77,9 @@ public with sharing class uNI_TableFiveARBudgetController {
             ];
             if (disb != null) {
                 res.disbursementYear = (disb.uNI_DisbursementYear__c == null) ? null : String.valueOf(disb.uNI_DisbursementYear__c);
+            }
+            if (disb != null && disb.uNI_IndividualApplication__c != null) {
+                disbIndId = disb.uNI_IndividualApplication__c;
             }
         } catch (Exception e) {
             // ignore, year stays null
@@ -118,24 +122,65 @@ public with sharing class uNI_TableFiveARBudgetController {
             }
         }
 
+        String versionToUse;
         // If still not found, derive from Annual Report record
         if (indId == null) {
             try {
                 uNI_Annual_Report__c ar = [
-                    SELECT uNI_Individual_Application__c
+                    SELECT uNI_Individual_Application__c, uNI_LogframeVersion__c
                     FROM uNI_Annual_Report__c
                     WHERE Id = :recordId
                     LIMIT 1
                 ];
                 indId = ar != null ? ar.uNI_Individual_Application__c : null;
+                versionToUse = ar != null ? ar.uNI_LogframeVersion__c : null;
             } catch (Exception e) {
                 // ignore; indId stays null
             }
         }
 
-        Integer outputsCount = 0;
+        if (indId == null && disbIndId != null) {
+            indId = disbIndId;
+        }
+
+        if (versionToUse == null && indId != null) {
+            try {
+                IndividualApplication ia = [
+                    SELECT uNI_LogframeVersion__c
+                    FROM IndividualApplication
+                    WHERE Id = :indId
+                    LIMIT 1
+                ];
+                versionToUse = ia != null ? ia.uNI_LogframeVersion__c : null;
+            } catch (Exception e) {
+                // ignore; versionToUse stays null
+            }
+        }
+
+        Integer outputsCount;
         if (indId != null) {
-            outputsCount = [SELECT COUNT() FROM uNI_PortfolioOutput__c WHERE uNI_IndividualApplication__c = :indId AND uNI_Logframe__c != null];
+            if (!String.isBlank(versionToUse)) {
+                outputsCount = [
+                    SELECT COUNT()
+                    FROM uNI_PortfolioOutput__c
+                    WHERE uNI_IndividualApplication__c = :indId
+                      AND uNI_Logframe__c != null
+                      AND (
+                        uNI_Version__c = :versionToUse
+                        OR uNI_Version__c = null
+                        OR uNI_LogframeVersion__c = :versionToUse
+                      )
+                      AND uNI_OutputTitle__c != 'Crosscutting'
+                ];
+            } else {
+                outputsCount = [
+                    SELECT COUNT()
+                    FROM uNI_PortfolioOutput__c
+                    WHERE uNI_IndividualApplication__c = :indId
+                      AND uNI_Logframe__c != null
+                      AND uNI_OutputTitle__c != 'Crosscutting'
+                ];
+            }
         }
         res.numberOfOutputs = outputsCount;
 

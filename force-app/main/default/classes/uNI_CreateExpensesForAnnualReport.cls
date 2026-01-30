@@ -133,12 +133,19 @@ public without sharing class uNI_CreateExpensesForAnnualReport {
                 FROM uNI_PortfolioOutput__c
                 WHERE uNI_IndividualApplication__c = :iaId
                   AND uNI_Logframe__c != null
+                  AND (
+                    uNI_Version__c = :version
+                    OR uNI_Version__c = null
+                    OR uNI_LogframeVersion__c = :version
+                  )
                 ORDER BY uNI_InternalSequence__c ASC, CreatedDate ASC
             ]) {
-                if (!outputIndexMap.containsKey(po.Id)) {
+                String title = po.uNI_OutputTitle__c;
+                Boolean isCrosscutting = title != null && title.trim().equalsIgnoreCase('Crosscutting');
+                if (!isCrosscutting && !outputIndexMap.containsKey(po.Id)) {
                     outputIndexMap.put(po.Id, seq++);
                 }
-                outputTitleMap.put(po.Id, po.uNI_OutputTitle__c);
+                outputTitleMap.put(po.Id, title);
             }
 
             List<uNI_BudgetData__c> yrBudgetRows = [

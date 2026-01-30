@@ -160,3 +160,172 @@ If you want to eliminate those empty outputs, I can:
 Tell me which option you prefer and I’ll implement it.
 
 ---
+
+
+**User**
+
+can we use the logframe to get the number of outputs , and then display the max output in the columns, for example for this individual application the logframe contained only 3 outputs,
+
+---
+
+
+**OpenAI Codex**
+
+Done. Table 3 now uses the logframe version to determine the output count, and it excludes Crosscutting so you’ll get the true “max output” columns (e.g., 3 for your IA).
+
+Changes:
+- `force-app/main/default/classes/uNI_TableThreeARBudgetController.cls`
+  - Resolve `versionToUse` from the Annual Report (if the recordId is AR), otherwise from the IA.
+  - Count outputs filtered by `uNI_LogframeVersion__c` (or `uNI_Version__c`) and exclude `uNI_OutputTitle__c = 'Crosscutting'`.
+
+If you want this behavior consistent across Tables 4/5 too, I can mirror the same change there.
+
+---
+
+
+**User**
+
+also in the table4 why the budgets is coming under output 4?? this is not making any sense , for your knowledge, the budget is taken by the uNI_BudgetData LWC, can you please tell me what is the issue.
+
+---
+
+
+**OpenAI Codex**
+
+The “budget under Output 4” is coming from the **output index mapping**, not from the LWC itself.
+
+What’s happening
+- **Table 4 reads `uNI_Expense_Types__c` fields** like `uNI_ProjectedExpenseOutput1__c ... 15__c`. It does **not** read BudgetData directly.
+- Those projected output fields are **populated by `uNI_CreateExpensesForAnnualReport`** using an index map built from **all `uNI_PortfolioOutput__c` records with `uNI_Logframe__c != null`**.
+- That list includes **Crosscutting** and **outputs from multiple logframe versions**, so the index order is not “Output 1/2/3” like you expect.
+
+For this IA, the index order is:
+1) Crosscutting  
+2) Output 1  
+3) Output 2  
+4) Output 3  
+5) Output 2 (other logframe)  
+6) Output 1 (other logframe)  
+7) Output 3 (other logframe)  
+8) Crosscutting
+
+So **Output 3 ends up at index 4**, which is why the budget shows under **Output 4** in Table 4.
+
+Root cause
+- `uNI_CreateExpensesForAnnualReport` builds the output index **without filtering by logframe version** and **without excluding Crosscutting**, so the indexes are shifted.
+- `uNI_TableFourARBudgetController` uses the same unfiltered count when it builds columns, so the UI follows that shifted index.
+
+If you want it to show “only Output 1–3”:
+1) Filter outputs **by the AR logframe version** in both:
+   - `uNI_CreateExpensesForAnnualReport` (outputIndexMap)
+   - `uNI_TableFourARBudgetController` (numberOfOutputs)
+2) Exclude `uNI_OutputTitle__c = 'Crosscutting'` from the output index/count.
+
+I can implement those fixes (same approach as we just did for Table 3) so Output 1–3 align correctly.
+
+---
+
+
+**User**
+
+sure please do that
+
+---
+
+
+**OpenAI Codex**
+
+Applied the fixes.
+
+What changed
+- `uNI_CreateExpensesForAnnualReport` now builds the output index **only from the selected logframe version** and **excludes Crosscutting**, so Output 1–3 won’t be shifted.
+  - File: `force-app/main/default/classes/uNI_CreateExpensesForAnnualReport.cls`
+- `uNI_TableFourARBudgetController` now counts outputs the same way (version-aware + excluding Crosscutting), so the number of columns matches the logframe outputs.
+  - File: `force-app/main/default/classes/uNI_TableFourARBudgetController.cls`
+
+This should stop budgets from showing under Output 4 when only 3 outputs exist.
+
+If you want, I can also mirror this logic in Table 5 (it currently uses the same unfiltered count).
+
+---
+
+
+**User**
+
+no, the whole approach is wrong. the source of my budget is the uNI_BudgetData LWC there give me the table that the uNI_BudgetData will generate in ui,
+
+---
+
+
+**OpenAI Codex**
+
+Got it. The `uNI_BudgetData` LWC builds its UI from `uNI_BudgetDataController.getBudgetData` and the active column set stored in `uNI_BudgetDataColumns__c`.
+
+For IA `0iTFT00000004212AA` (version `1`), the active columns are:
+
+- Output
+- Organization
+- Country
+- Year
+- Expense Group
+- Funding Source
+- Grouping 1 (Option A) → Cost (total, US$)
+- Grouping 2: Complementary → Cost (total, US$), % allocated to Unitaid, % allocated to co‑funding, Total Unitaid (US$), Total co‑funding (US$), Total project (US$)
+
+Here is the exact table the LWC would render (values resolved to labels for Output, Organization, Country, Funding Source):
+
+```
+| Output        | Organization            | Country         | Year | Expense Group                         | Funding Source                          | G1 Cost (total, US$) | G2 Cost (total, US$) | G2 % Unitaid | G2 % co-funding | G2 Total Unitaid (US$) | G2 Total co-funding (US$) | G2 Total project (US$) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Output 2      | NGO WHO                 | Afghanistan     | 2026 | Procurement and supply chain          | 2025-2027 Specified Core Contribution   | 1879 | 1879 | 100 | 0  | 1879  | 0   | 1879  |
+| Output 2      | Lead organization name  | Afghanistan     | 2026 | Travel related                        | 2025-2027 Specified Core Contribution   | 1989 | 1989 | 100 | 0  | 1989  | 0   | 1989  |
+| Output 1      | Lead organization name  | Albania         | 2026 | Procurement and supply chain          | GATES Investment ID INV-043059          | 1632 | 1632 | 100 | 0  | 1632  | 0   | 1632  |
+| Output 1      | Lead organization name  | Afghanistan     | 2026 | Health commodities and health equipment | 2025-2027 Specified Core Contribution | 1898 | 1898 | 100 | 0  | 1898  | 0   | 1898  |
+| Output 1      | Lead organization name  | Albania         | 2026 | Equipment other than health           | GATES Investment ID INV-043059          | 1099 | 1099 | 90  | 10 | 989.1 | 109.9 | 989.1 |
+| Output 3      | NGO WHO                 | Afghanistan     | 2026 | Procurement and supply chain          | 2025-2027 Specified Core Contribution   | 1898 | 1898 | 90  | 10 | 1708.2| 189.8| 1708.2 |
+| Output 3      | NGO WHO                 | Albania         | 2026 | Health commodities and health equipment | GATES Investment ID INV-043059        | 1089 | 1089 | 100 | 0  | 1089  | 0   | 1089  |
+| Crosscutting | NGO WHO                 | Afghanistan     | 2027 | Equipment other than health           | 2025-2027 Specified Core Contribution   | 1798 | 1798 | 90  | 10 | 1618.2| 179.8| 1618.2 |
+| Crosscutting | Lead organization name  | Albania         | 2027 | Health commodities and health equipment | GATES Investment ID INV-043059        | 1989 | 1989 | 100 | 0  | 1989  | 0   | 1989  |
+| Output 3      | Lead organization name  | Albania         | 2027 | Procurement and supply chain          | GATES Investment ID INV-043059          | 1989 | 1989 | 100 | 0  | 1989  | 0   | 1989  |
+| Output 3      | NGO WHO                 | Afghanistan     | 2027 | Travel related                        | GATES Investment ID INV-071334          | 1090 | 1090 | 100 | 0  | 1090  | 0   | 1090  |
+| Output 3      | NGO WHO                 | American Samoa  | 2027 | Equipment other than health           | GATES Investment ID INV-043059          | 1233 | 1233 | 100 | 0  | 1233  | 0   | 1233  |
+```
+
+If you want this table for a different IA, record type, or version, tell me the recordId/version and I’ll regenerate it.
+
+---
+
+
+**User**
+
+remember this output. do you think the uNI_CreateExpensesForAnnualReport, will be able to create expense type records that i can use in the table 3, 4, and 5, also notice that there are no output 4, 5, ... etc (in the uNI_BudgetData we only have until output 3 and logframe), make nessasary changes to the uNI_CreateExpensesForAnnualReport and the table 3, 4, 5 LWCs so that i can correctly create expensetype records for annual report as well as render them correctly in the table 3,4,5 do this very carefully.
+
+---
+
+
+**OpenAI Codex**
+
+Made the changes so Annual Report expense types align with the same output ordering the `uNI_BudgetData` LWC uses (logframe/version‑based, no extra Output 4+), and the tables render only those outputs.
+
+What I changed
+- Output mapping in `uNI_CreateExpensesForAnnualReport` now follows the same version filter as BudgetData and **excludes Crosscutting from output index**. This prevents Output 3 values from landing under Output 4.
+- Table 3/4/5 controllers now compute `numberOfOutputs` using **version‑aware outputs** and **exclude Crosscutting**.
+- Table 3/4/5 LWCs now **respect server output count even if 0** and only fallback when the controller can’t determine a count.
+
+Files updated
+- `force-app/main/default/classes/uNI_CreateExpensesForAnnualReport.cls`
+- `force-app/main/default/classes/uNI_TableThreeARBudgetController.cls`
+- `force-app/main/default/classes/uNI_TableFourARBudgetController.cls`
+- `force-app/main/default/classes/uNI_TableFiveARBudgetController.cls`
+- `force-app/main/default/lwc/uNITableThreeARBudget/uNITableThreeARBudget.js`
+- `force-app/main/default/lwc/uNITableFourARBudget/uNITableFourARBudget.js`
+- `force-app/main/default/lwc/uNITableFiveARBudget/uNITableFiveARBudget.js`
+
+Important note
+- Existing Annual Report Expense Type records created before this fix may still have values in Output 4+ fields. After deploying, **re-run the Annual Report flow** (or the invocable) to regenerate expense types so outputs populate into 1–3 correctly.
+
+If you want, I can also:
+1) add a one‑time cleanup script to clear old Output4+ values on existing AR expense types, or  
+2) run the flow for `a19FT000001xRMzYAM` to regenerate using the fixed logic.
+
+---

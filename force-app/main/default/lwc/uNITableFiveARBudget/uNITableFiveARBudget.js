@@ -122,13 +122,12 @@ export default class UNITableFiveARBudget extends LightningElement {
                     res && res.disbursementYear
                         ? `Year (${res.disbursementYear})`
                         : 'Year';
-                let outputsCount = Math.min(
-                    this.MAX_OUTPUTS,
-                    res.numberOfOutputs || 0
-                );
-                if (!outputsCount && res.expenseTypes && res.expenseTypes.length) {
+                let outputsCount = res ? res.numberOfOutputs : null;
+                // Fallback only when the server couldn't determine the count
+                if ((outputsCount === null || outputsCount === undefined) && res.expenseTypes && res.expenseTypes.length) {
                     outputsCount = this.deriveOutputsFromData(res.expenseTypes);
                 }
+                outputsCount = Math.min(this.MAX_OUTPUTS, outputsCount || 0);
 
                 this.columns = this.buildColumns(outputsCount);
                 const rows = (res.expenseTypes || []).map((rec, idx) =>
