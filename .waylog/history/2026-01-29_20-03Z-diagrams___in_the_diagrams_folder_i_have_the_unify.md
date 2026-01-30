@@ -178,3 +178,47 @@ If you want, I can also troubleshoot the CLI setup in this repo.
 try again since you already have sucessfully ran and fetched objects.
 
 ---
+
+
+**OpenAI Codex**
+
+Pulled the `uNI_*` objects from your UAT org and added the missing boxes (no relations) to the diagram.
+
+- Added 44 new `uNI_*` boxes from UAT. `force-app/main/default/diagrams/unifyDataModel_v2.drawio`
+
+If you want a list view in the diagram grouped or arranged differently, tell me how you want them laid out.
+
+---
+
+
+**User**
+
+add the newly added box in the right, in a vertica line, ill arrange them and create thier links myself
+
+---
+
+
+**OpenAI Codex**
+
+Moved the 44 newly added UAT boxes into a single vertical line on the right side of the diagram and expanded the page width/height to fit. `force-app/main/default/diagrams/unifyDataModel_v2.drawio`
+
+If you want a different order or spacing, tell me the layout you prefer.
+
+---
+
+
+**User**
+
+i have added colors to boxes, please apply the light yellow color to custom objects (like the one used in (uNI_Abbreviation__c) and light blue color to standard objects (like the one used in Account)
+
+---
+
+
+**OpenAI Codex**
+
+Applied the styles from your examples: light yellow for custom objects (matching `uNI_Abbreviation__c`) and light blue for standard objects (matching `Account`). Updated 70 boxes.  
+`force-app/main/default/diagrams/unifyDataModel_v2.drawio`
+
+If any non-`__c` objects should be treated as custom (e.g., managed package), tell me which ones and I’ll adjust.
+
+---

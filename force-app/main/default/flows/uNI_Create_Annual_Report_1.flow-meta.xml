@@ -40,6 +40,45 @@
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </actionCalls>
     <actionCalls>
+        <name>Copy_1_of_Clone_Budget_data_for_annual_report</name>
+        <label>Copy 1 of Clone Budget data for annual report</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>uNI_CreateExpensesForAnnualReport</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>Update_Annual_Report</targetReference>
+        </connector>
+        <flowTransactionModel>Automatic</flowTransactionModel>
+        <inputParameters>
+            <name>annualReportId</name>
+            <value>
+                <elementReference>v_AnnualReportId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>individualApplicationId</name>
+            <value>
+                <elementReference>get_Individual_Application.Id</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>targetYear</name>
+            <value>
+                <elementReference>SelectedReportYearNumber</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>version</name>
+            <value>
+                <elementReference>get_Reprogramming_requests.logframeVersion</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>uNI_CreateExpensesForAnnualReport</nameSegment>
+        <offset>0</offset>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </actionCalls>
+    <actionCalls>
         <name>get_Reprogramming_requests</name>
         <label>get Reprogramming requests before cutoff</label>
         <locationX>0</locationX>
@@ -128,7 +167,7 @@
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>adf</targetReference>
+                <targetReference>Already_Present</targetReference>
             </connector>
             <label>Annual Report Present</label>
         </rules>
@@ -139,7 +178,7 @@
         <locationX>0</locationX>
         <locationY>0</locationY>
         <defaultConnector>
-            <targetReference>asdfasdf</targetReference>
+            <targetReference>Clone_Budget_data_for_annual_report</targetReference>
         </defaultConnector>
         <defaultConnectorLabel>Use Disbursement Budget</defaultConnectorLabel>
         <rules>
@@ -153,7 +192,7 @@
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>asdfqw</targetReference>
+                <targetReference>ReprogrammingBudgetScreen</targetReference>
             </connector>
             <label>reprogramming present</label>
         </rules>
@@ -190,8 +229,14 @@
             <label>Selected Year Valid</label>
         </rules>
     </decisions>
-    <description>Annual Report that supports versioning and reprogramming logics.</description>
+    <description>Annual Report that supports versioning and reprogramming logics. (cut off date stored in the formula field)</description>
     <environments>Default</environments>
+    <formulas>
+        <description>Cutoff date for reprogramming eligibility (defaults to June 1 of the selected report year).</description>
+        <name>ARCutoffDate</name>
+        <dataType>Date</dataType>
+        <expression>DATE({!SelectedReportYearNumber},6,1)</expression>
+    </formulas>
     <formulas>
         <name>ARDueDate</name>
         <dataType>Date</dataType>
@@ -208,12 +253,6 @@
         <expression>DATE({!SelectedReportYearNumber},1,1)</expression>
     </formulas>
     <formulas>
-        <description>Cutoff date for reprogramming eligibility (defaults to June 1 of the selected report year).</description>
-        <name>ARCutoffDate</name>
-        <dataType>Date</dataType>
-        <expression>DATE({!SelectedReportYearNumber},6,1)</expression>
-    </formulas>
-    <formulas>
         <name>ARYEAR</name>
         <dataType>Number</dataType>
         <expression>{!SelectedReportYearNumber}</expression>
@@ -223,11 +262,6 @@
         <name>ARYearTextfromIA</name>
         <dataType>String</dataType>
         <expression>TEXT({!SelectedReportYearNumber})</expression>
-    </formulas>
-    <formulas>
-        <name>SelectedLogframeVersionForAR</name>
-        <dataType>String</dataType>
-        <expression>IF({!get_Reprogramming_requests.logframeVersion}=&quot;0&quot;,{!get_Individual_Application.uNI_LogframeVersion__c},{!get_Reprogramming_requests.logframeVersion})</expression>
     </formulas>
     <formulas>
         <name>CurrentYear</name>
@@ -246,6 +280,11 @@
         <dataType>Number</dataType>
         <expression>IF({!StartYear} &gt; {!CurrentYear},{!StartYear},{!CurrentYear})</expression>
         <scale>0</scale>
+    </formulas>
+    <formulas>
+        <name>SelectedLogframeVersionForAR</name>
+        <dataType>String</dataType>
+        <expression>IF({!get_Reprogramming_requests.logframeVersion}=&quot;0&quot;,{!get_Individual_Application.uNI_LogframeVersion__c},{!get_Reprogramming_requests.logframeVersion})</expression>
     </formulas>
     <formulas>
         <name>SelectedReportNumber</name>
@@ -439,7 +478,6 @@
         <object>IndividualApplication</object>
         <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
-    
     <recordLookups>
         <name>get_selected_AR</name>
         <label>get selected AR</label>
@@ -519,6 +557,9 @@
         <label>Update Annual report Fields for disbursment</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
+        <connector>
+            <targetReference>AR_Created_Success</targetReference>
+        </connector>
         <filterLogic>and</filterLogic>
         <filters>
             <field>Id</field>
@@ -549,8 +590,8 @@
     </recordUpdates>
     <runInMode>SystemModeWithoutSharing</runInMode>
     <screens>
-        <name>adf</name>
-        <label>adf</label>
+        <name>Already_Present</name>
+        <label>Already Present</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <allowBack>false</allowBack>
@@ -573,46 +614,16 @@
         <showHeader>false</showHeader>
     </screens>
     <screens>
-        <name>asdfasdf</name>
-        <label>asdf</label>
+        <name>AR_Created_Success</name>
+        <label>AR Created Success</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
         <allowBack>false</allowBack>
         <allowFinish>true</allowFinish>
         <allowPause>false</allowPause>
-        <connector>
-            <targetReference>Clone_Budget_data_for_annual_report</targetReference>
-        </connector>
         <fields>
             <name>adsf</name>
-            <fieldText>&lt;p&gt;Disbursement path&lt;/p&gt;</fieldText>
-            <fieldType>DisplayText</fieldType>
-            <styleProperties>
-                <verticalAlignment>
-                    <stringValue>top</stringValue>
-                </verticalAlignment>
-                <width>
-                    <stringValue>12</stringValue>
-                </width>
-            </styleProperties>
-        </fields>
-        <showFooter>true</showFooter>
-        <showHeader>false</showHeader>
-    </screens>
-    <screens>
-        <name>asdfqw</name>
-        <label>asdfqwe</label>
-        <locationX>0</locationX>
-        <locationY>0</locationY>
-        <allowBack>false</allowBack>
-        <allowFinish>true</allowFinish>
-        <allowPause>false</allowPause>
-        <connector>
-            <targetReference>Update_Annual_Report</targetReference>
-        </connector>
-        <fields>
-            <name>re</name>
-            <fieldText>&lt;p&gt;this path will not be used anymore since we are using the next best approach and the source of all the budget will be from the Approved budget of that year.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Reprogramming request path&lt;/p&gt;&lt;p&gt;the repprogrammmign request number&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;{!get_Reprogramming_requests.reprogrammingRequestName}&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;</fieldText>
+            <fieldText>&lt;p&gt;&lt;strong&gt;Annual Report Template created, Please proceed to the annual report section. &lt;/strong&gt;&lt;/p&gt;</fieldText>
             <fieldType>DisplayText</fieldType>
             <styleProperties>
                 <verticalAlignment>
@@ -677,6 +688,34 @@
             </styleProperties>
         </fields>
         <nextOrFinishButtonLabel>Back</nextOrFinishButtonLabel>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <screens>
+        <name>ReprogrammingBudgetScreen</name>
+        <label>Reprogramming Budget Screen</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Copy_1_of_Clone_Budget_data_for_annual_report</targetReference>
+        </connector>
+        <fields>
+            <name>re</name>
+            <fieldText>&lt;p&gt;Annual Report to be  reported against &lt;strong style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;{!get_Reprogramming_requests.reprogrammingRequestName}&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;Logframe version : &lt;/span&gt;&lt;strong&gt;{!get_Reprogramming_requests.logframeVersion}&lt;/strong&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
+        </fields>
+        <nextOrFinishButtonLabel>Next</nextOrFinishButtonLabel>
         <showFooter>true</showFooter>
         <showHeader>false</showHeader>
     </screens>
