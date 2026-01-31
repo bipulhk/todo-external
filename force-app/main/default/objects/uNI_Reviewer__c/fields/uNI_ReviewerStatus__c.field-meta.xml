@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>uNI_ReviewerStatus__c</fullName>
+    <label>Reviewer Status</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Invited</fullName>
+                <default>false</default>
+                <label>Invited</label>
+            </value>
+            <value>
+                <fullName>Accepted</fullName>
+                <default>false</default>
+                <label>Accepted</label>
+            </value>
+            <value>
+                <fullName>Declined</fullName>
+                <default>false</default>
+                <label>Declined</label>
+            </value>
+            <value>
+                <fullName>DOI Declared</fullName>
+                <default>false</default>
+                <label>DOI Declared</label>
+            </value>
+            <value>
+                <fullName>Rescind invitation</fullName>
+                <default>false</default>
+                <label>Rescind invitation</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

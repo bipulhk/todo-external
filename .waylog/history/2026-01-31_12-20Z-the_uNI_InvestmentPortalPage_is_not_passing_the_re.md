@@ -240,3 +240,382 @@ Changes:
 If you want the left/right label widths tweaked (e.g., tighter labels or more space for values), tell me the exact proportions and I’ll adjust.
 
 ---
+
+
+**User**
+
+superb, thats what i wanted.
+
+---
+
+
+**OpenAI Codex**
+
+Great — glad it matches what you wanted. If you want any minor tweaks (spacing, label width, borders), just say the word.
+
+---
+
+
+**User**
+
+can you also add the Project Team Related list in it object name uNI_Reviewer__c, for you i have imported the object and the fields for you in the project repo
+<image></image>
+
+---
+
+
+**User**
+
+can you also add the Project Team Related list in it object name uNI_Reviewer__c, for you i have imported the object and the fields for you in the project repo
+
+---
+
+
+**OpenAI Codex**
+
+Got it. Per your “confirm before proceeding” request, I won’t make changes yet.
+
+Here’s the plan I can implement for the Project Team related list:
+
+- Add an Apex controller (e.g., `uNI_ProjectTeamController`) with a cacheable method `getProjectTeam(investmentId)` that queries `uNI_Reviewer__c` where `uNI_IndividualApplication__c = :investmentId`, returning `Id`, `uNI_ReviewerRole__c`, `User__c`, `User__r.Name`.
+- In `uNIInvestmentOverviewPage`, add a “Project Team (n)” card below the details, with a `lightning-datatable` showing columns **Role** and **User** (matching your screenshot).
+
+Please confirm:
+1) OK to create a new Apex class for the query?  
+2) Place the Project Team list **below** the current details card?  
+3) Columns only **Role** and **User** (no extra fields)?
+
+Once you confirm, I’ll implement it.
+
+---
+
+
+**User**
+
+yes for all.
+
+---
+
+
+**OpenAI Codex**
+
+Added the Project Team related list (uNI_Reviewer__c) under the Investment details, with Role + User columns and row numbers, matching your screenshot.
+
+Changes:
+- `force-app/main/default/classes/uNI_ProjectTeamController.cls`
+- `force-app/main/default/classes/uNI_ProjectTeamController.cls-meta.xml`
+- `force-app/main/default/lwc/uNIInvestmentOverviewPage/uNIInvestmentOverviewPage.js`
+- `force-app/main/default/lwc/uNIInvestmentOverviewPage/uNIInvestmentOverviewPage.html`
+
+Notes:
+- Uses `uNI_Reviewer__c` filtered by `uNI_IndividualApplication__c = resolvedInvestmentId`.
+- User column renders as a link to the User record.
+
+If you want the list filtered by specific roles (like the “Filtered by Role” in your screenshot) or extra columns, tell me which roles/fields and I’ll add it.
+
+---
+
+
+**User**
+
+use this query to display the table
+SELECT Id , name, User__r.name, uNI_ReviewerRole__c FROM uNI_Reviewer__c where uNI_IndividualApplication__c = '0iTFT00000003yn2AA'
+
+---
+
+
+**OpenAI Codex**
+
+Updated to use the exact fields from your query (Id, Name, User__r.Name, uNI_ReviewerRole__c). The table now shows Role, User (name), and Reviewer Id (Name).
+
+Changes:
+- `force-app/main/default/classes/uNI_ProjectTeamController.cls`
+- `force-app/main/default/lwc/uNIInvestmentOverviewPage/uNIInvestmentOverviewPage.js`
+
+If you want me to remove the “Reviewer Id” column or change labels/order, tell me the exact layout.
+
+---
+
+
+**User**
+
+the table is not loading can you add debugs why is that the case? when i run in in the qwery editor it works fine
+<image></image>
+
+---
+
+
+**User**
+
+the table is not loading can you add debugs why is that the case? when i run in in the qwery editor it works fine
+
+---
+
+
+**OpenAI Codex**
+
+Added debug logging on both Apex and LWC sides to help pinpoint why the related list isn’t returning rows in the community context.
+
+Changes:
+- `force-app/main/default/classes/uNI_ProjectTeamController.cls`
+  - Logs investmentId + user info (userId/profileId/userType)
+- `force-app/main/default/lwc/uNIInvestmentOverviewPage/uNIInvestmentOverviewPage.js`
+  - Logs row count + investmentId on success
+  - Logs full error payload on failure
+
+What to check next:
+- In the browser console: look for `[uNIInvestmentOverviewPage] ProjectTeam rows ...`
+- In debug logs (Salesforce): look for `uNI_ProjectTeamController.getProjectTeam` lines.
+
+If the Apex log shows rows in admin but not community user, it’s almost always sharing/FLS. If you want, tell me and I’ll add a temporary “run as without sharing” option or explicit FLS checks (but I won’t do that without your confirmation).
+
+---
+
+
+**User**
+
+still cant see anything. can you please check
+
+---
+
+
+**OpenAI Codex**
+
+I can’t “check” the org from here, but I did review the code: if you’re seeing **“No Project Team members found”** (not an error), that means the Apex query is returning **0 rows for the community user**. Since the same query works in Query Editor (admin context), this almost always points to **sharing/visibility** for `uNI_Reviewer__c` (and/or the lookup to `IndividualApplication`) for the portal user.
+
+Before I change anything (per your request), please choose:
+
+1) **Temporarily switch the controller to `without sharing`** to confirm it’s a sharing issue (quick test, but less secure).  
+2) **Keep `with sharing` and fix sharing**: add a sharing set or criteria‑based sharing rule so community users can read `uNI_Reviewer__c` where `uNI_IndividualApplication__c` = their IA.  
+3) **Add UI debug panel** (shows resolvedInvestmentId + row count + error JSON on the page).
+
+Which option should I proceed with?
+
+---
+
+
+**User**
+
+i was able to solve it using the owd rules, also can you please rearrange the columns , i only need the name and the role, also for some reason the name field is not showing the correct name its showing the name like  User1760347278326353280
+i have also attached the screen shot
+<image></image>
+
+---
+
+
+**User**
+
+i was able to solve it using the owd rules, also can you please rearrange the columns , i only need the name and the role, also for some reason the name field is not showing the correct name its showing the name like  User1760347278326353280
+i have also attached the screen shot
+
+---
+
+
+**OpenAI Codex**
+
+Got it. Before I change anything (per your request), confirm:
+
+- Remove **Reviewer Id** column, keep only **User** and **Role**.
+- For User name, should I display the related **User__r.Name** (full name) and not the auto‑generated username?
+
+Once you confirm, I’ll update the datatable columns + mapping.
+
+---
+
+
+**User**
+
+Yes for both
+
+---
+
+
+**OpenAI Codex**
+
+Updated the Project Team table to show only **User** and **Role**, and it uses `User__r.Name` for display.
+
+Changed:
+- `force-app/main/default/lwc/uNIInvestmentOverviewPage/uNIInvestmentOverviewPage.js`
+
+If you still see the `User1760…` values, that means the relationship name isn’t coming through for community users. I can switch to querying `User__r.Name` into a separate Apex DTO to guarantee the correct name if you want.
+
+---
+
+
+**User**
+
+still getting the wierd user name 
+also please apply the filter to the query i want to include only the users mentioned in screen shot
+<image></image>
+
+---
+
+
+**User**
+
+still getting the wierd user name 
+also please apply the filter to the query i want to include only the users mentioned in screen shot
+
+---
+
+
+**OpenAI Codex**
+
+Before I change anything (per your request), please confirm:
+
+1) Filter roles to exactly: `PM`, `PO`, `Strategy`, `Legal`, `MEL`, `Procurement` — correct?  
+2) OK to change the Apex method to return a small DTO (Role + User Name) so we always display the real user name instead of `User1760…`?
+
+Once you confirm, I’ll implement both.
+
+---
+
+
+**User**
+
+Yes sure,
+
+---
+
+
+**OpenAI Codex**
+
+Implemented both changes:
+
+- Filtered to roles `PM`, `PO`, `Strategy`, `Legal`, `MEL`, `Procurement`.
+- Switched Apex to return a small DTO with `userName` and `role` to reliably show the real user name.
+
+Changes:
+- `force-app/main/default/classes/uNI_ProjectTeamController.cls`
+- `force-app/main/default/lwc/uNIInvestmentOverviewPage/uNIInvestmentOverviewPage.js`
+
+If you still see odd names, it means `User__r.Name` is not readable for that community profile; we can fall back to a different field (e.g., `User__r.Alias` or a custom text field) if needed.
+
+---
+
+
+**User**
+
+force-app\main\default\classes\uNI_ProjectTeamController.cls  Invalid bind expression type of List<String> for column of type String (22:36)
+
+---
+
+
+**OpenAI Codex**
+
+Fixed the `INCLUDES` bind error by building a safe SOQL string and using `Database.query` (Salesforce doesn’t accept a `List<String>` bind with `INCLUDES`).
+
+Updated:
+- `force-app/main/default/classes/uNI_ProjectTeamController.cls`
+
+Try again now; the query should compile and run in Apex.
+
+---
+
+
+**User**
+
+the table is still not fixed the userid is still there, please fix this 
+<image></image>
+
+---
+
+
+**User**
+
+the table is still not fixed the userid is still there, please fix this
+
+---
+
+
+**OpenAI Codex**
+
+I can fix this, but per your “confirm before proceeding” request, please approve the approach first:
+
+I propose to:
+- Query `User__r.FirstName`, `User__r.LastName`, and `User__r.Alias` (in addition to `User__r.Name`).
+- Build a display name in Apex with a fallback order:
+  1) `FirstName + LastName`  
+  2) `Name` (if it doesn’t look like `User########`)  
+  3) `Alias`
+
+This avoids showing the placeholder `User176...` strings.
+
+Confirm if you want me to proceed with that.
+
+---
+
+
+**User**
+
+sure, also please check why the role columsn were not populating
+
+---
+
+
+**OpenAI Codex**
+
+Fixed both issues:
+
+- **User name**: Apex now builds a proper display name using `FirstName + LastName`, with fallbacks to `Name` (only if it’s not the `User########` pattern) and `Alias`.
+- **Role column**: LWC now maps the column to `role` (the DTO field), which is why it was blank before.
+
+Changes:
+- `force-app/main/default/classes/uNI_ProjectTeamController.cls`
+- `force-app/main/default/lwc/uNIInvestmentOverviewPage/uNIInvestmentOverviewPage.js`
+
+Try again and confirm if the names + roles show correctly. If any names are still blank, we can add another fallback (e.g., `Username`).
+
+---
+
+
+**User**
+
+now create a simililar table just beneath it 
+
+screenshot attached. the table is same as the Project team member but just query and display the roles that are mentioned in the screenshot
+<image></image><image></image>
+
+---
+
+
+**User**
+
+now create a simililar table just beneath it 
+
+screenshot attached. the table is same as the Project team member but just query and display the roles that are mentioned in the screenshot
+
+---
+
+
+**OpenAI Codex**
+
+Before I proceed (per your request), please confirm:
+
+- Filter roles to exactly: `Implementer` and `Contributor`?
+- Section title should be **“Implementing Partner Accounts”** and placed directly under Project Team?
+
+Once you confirm, I’ll add the second table.
+
+---
+
+
+**User**
+
+Yes
+
+---
+
+
+**OpenAI Codex**
+
+Added the second table below Project Team for **Implementing Partner Accounts**, filtered to roles `Implementer` and `Contributor`, using the same User/Role columns.
+
+Changes:
+- `force-app/main/default/classes/uNI_ProjectTeamController.cls`
+- `force-app/main/default/lwc/uNIInvestmentOverviewPage/uNIInvestmentOverviewPage.js`
+- `force-app/main/default/lwc/uNIInvestmentOverviewPage/uNIInvestmentOverviewPage.html`
+
+If you want different labels, ordering, or an icon header like the screenshot, tell me and I’ll tweak it.
+
+---

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>uNI_ReviewerRole__c</fullName>
+    <label>Role</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>MultiselectPicklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Level 1</fullName>
+                <default>false</default>
+                <label>Level 1</label>
+            </value>
+            <value>
+                <fullName>Level 2</fullName>
+                <default>false</default>
+                <label>Level 2</label>
+            </value>
+            <value>
+                <fullName>Level 3</fullName>
+                <default>false</default>
+                <label>Level 3</label>
+            </value>
+            <value>
+                <fullName>PRC</fullName>
+                <default>false</default>
+                <label>PRC</label>
+            </value>
+            <value>
+                <fullName>JRC</fullName>
+                <default>false</default>
+                <label>JRC</label>
+            </value>
+            <value>
+                <fullName>PM</fullName>
+                <default>false</default>
+                <label>PM</label>
+            </value>
+            <value>
+                <fullName>PO</fullName>
+                <default>false</default>
+                <label>PO</label>
+            </value>
+            <value>
+                <fullName>Strategy</fullName>
+                <default>false</default>
+                <label>Strategy</label>
+            </value>
+            <value>
+                <fullName>Legal</fullName>
+                <default>false</default>
+                <label>Legal</label>
+            </value>
+            <value>
+                <fullName>Director FA</fullName>
+                <default>false</default>
+                <label>Director FA</label>
+            </value>
+            <value>
+                <fullName>Director PD</fullName>
+                <default>false</default>
+                <label>Director PD</label>
+            </value>
+            <value>
+                <fullName>PD TL</fullName>
+                <default>false</default>
+                <label>PD TL</label>
+            </value>
+            <value>
+                <fullName>ED</fullName>
+                <default>false</default>
+                <label>ED</label>
+            </value>
+            <value>
+                <fullName>Grant Finance</fullName>
+                <default>false</default>
+                <label>Grant Finance</label>
+            </value>
+            <value>
+                <fullName>MEL</fullName>
+                <default>false</default>
+                <label>MEL</label>
+            </value>
+            <value>
+                <fullName>Procurement</fullName>
+                <default>false</default>
+                <label>Procurement</label>
+            </value>
+            <value>
+                <fullName>Implementer</fullName>
+                <default>false</default>
+                <label>Implementer</label>
+            </value>
+            <value>
+                <fullName>Contributor</fullName>
+                <default>false</default>
+                <label>Contributor</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+    <visibleLines>4</visibleLines>
+</CustomField>
