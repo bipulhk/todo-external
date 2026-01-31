@@ -127,6 +127,10 @@ export default class UNI_TableThreeARBudget extends LightningElement {
                     outputsCount = this.deriveOutputsFromData(res.expenseTypes);
                 }
                 outputsCount = Math.min(this.MAX_OUTPUTS, outputsCount || 0);
+                const maxUsed = this.getMaxUsedOutputIndex(res.expenseTypes || []);
+                if (maxUsed > 0 && outputsCount > maxUsed) {
+                    outputsCount = maxUsed;
+                }
                 console.log('Table3 AR outputsCount:', outputsCount);
                 this.columns = this.buildColumns(outputsCount);
 
@@ -277,6 +281,25 @@ export default class UNI_TableThreeARBudget extends LightningElement {
                 }
             }
         });
+        return maxIdx;
+    }
+
+    // Trim trailing empty outputs (all zero/null across rows)
+    getMaxUsedOutputIndex(list) {
+        let maxIdx = 0;
+        if (!list || list.length === 0) return maxIdx;
+        for (let i = 1; i <= this.MAX_OUTPUTS; i++) {
+            let used = false;
+            for (const rec of list) {
+                const proj = this.toNumberSafe(rec[`uNI_ProjectedExpenseOutput${i}__c`]);
+                const act = this.toNumberSafe(rec[`uNI_ProjectedExpenseOutput${i}AR__c`]);
+                if ((proj !== null && proj !== 0) || (act !== null && act !== 0)) {
+                    used = true;
+                    break;
+                }
+            }
+            if (used) maxIdx = i;
+        }
         return maxIdx;
     }
 

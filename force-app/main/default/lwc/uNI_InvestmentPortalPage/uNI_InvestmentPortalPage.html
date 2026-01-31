@@ -1,0 +1,28 @@
+<template>
+  <section class="portal-frame">
+    <header class="portal-header">
+      <h2 class="portal-title">Investment Portal</h2>
+      <p class="portal-subtitle">Tabs load dynamic LWCs through the loader.</p>
+    </header>
+
+    <nav class="portal-tabs" aria-label="Investment Portal Tabs">
+      <template for:each={tabsForRender} for:item="tab">
+        <button
+          key={tab.id}
+          class={tab.cssClass}
+          data-id={tab.id}
+          onclick={handleTabClick}
+          title={tab.label}
+        >
+          {tab.label}
+        </button>
+      </template>
+    </nav>
+
+    <div class="portal-content">
+      <template if:true={activeTab}>
+        <c-u-n-i-dynamic-lwc-loader lwc-name={activeTab.lwcName} lwc-params={activeTab.recordId}></c-u-n-i-dynamic-lwc-loader>
+      </template>
+    </div>
+  </section>
+</template>

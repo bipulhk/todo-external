@@ -1,0 +1,70 @@
+<template>
+  <template if:true={resolvedInvestmentId}>
+    <div class="detail-card">
+      <lightning-record-view-form
+        record-id={resolvedInvestmentId}
+        object-api-name="IndividualApplication"
+      >
+        <div class="slds-grid slds-wrap">
+          <div class="slds-col slds-size_1-of-2 slds-p-horizontal_small">
+            <div class="detail-row slds-grid slds-wrap">
+              <div class="detail-label slds-col slds-size_4-of-12">Implementing Partner</div>
+              <div class="detail-value slds-col slds-size_8-of-12">
+                <lightning-output-field field-name="uNI_LeadOrg__c" variant="label-hidden"></lightning-output-field>
+              </div>
+            </div>
+            <div class="detail-row slds-grid slds-wrap">
+              <div class="detail-label slds-col slds-size_4-of-12">Consortium Partners</div>
+              <div class="detail-value slds-col slds-size_8-of-12">
+                <lightning-output-field field-name="uNI_Consortium_Partners__c" variant="label-hidden"></lightning-output-field>
+              </div>
+            </div>
+            <div class="detail-row slds-grid slds-wrap">
+              <div class="detail-label slds-col slds-size_4-of-12">Investment Description</div>
+              <div class="detail-value slds-col slds-size_8-of-12">
+                <lightning-output-field field-name="uNI_InvestmentDescription__c" variant="label-hidden"></lightning-output-field>
+              </div>
+            </div>
+          </div>
+          <div class="slds-col slds-size_1-of-2 slds-p-horizontal_small">
+            <div class="detail-row slds-grid slds-wrap">
+              <div class="detail-label slds-col slds-size_4-of-12">Implementing Partner Portal</div>
+              <div class="detail-value slds-col slds-size_8-of-12">
+                <lightning-output-field field-name="uNI_IARecordPortalLink__c" variant="label-hidden"></lightning-output-field>
+              </div>
+            </div>
+            <div class="detail-row slds-grid slds-wrap">
+              <div class="detail-label slds-col slds-size_4-of-12">Implementation Start</div>
+              <div class="detail-value slds-col slds-size_8-of-12">
+                <lightning-output-field field-name="uNI_ImplementationStartDate__c" variant="label-hidden"></lightning-output-field>
+              </div>
+            </div>
+            <div class="detail-row slds-grid slds-wrap">
+              <div class="detail-label slds-col slds-size_4-of-12">Implementation End</div>
+              <div class="detail-value slds-col slds-size_8-of-12">
+                <lightning-output-field field-name="uNI_ImplementationEndDate__c" variant="label-hidden"></lightning-output-field>
+              </div>
+            </div>
+            <div class="detail-row slds-grid slds-wrap">
+              <div class="detail-label slds-col slds-size_4-of-12">Project Duration (Year)</div>
+              <div class="detail-value slds-col slds-size_8-of-12">
+                <lightning-output-field field-name="uNI_Project_Year__c" variant="label-hidden"></lightning-output-field>
+              </div>
+            </div>
+            <div class="detail-row slds-grid slds-wrap">
+              <div class="detail-label slds-col slds-size_4-of-12">Countries</div>
+              <div class="detail-value slds-col slds-size_8-of-12">
+                <lightning-output-field field-name="uNI_ApprovedCountries__c" variant="label-hidden"></lightning-output-field>
+              </div>
+            </div>
+          </div>
+        </div>
+      </lightning-record-view-form>
+    </div>
+  </template>
+  <template if:false={resolvedInvestmentId}>
+    <p class="slds-text-color_error slds-text-body_small">
+      No Investment Id was resolved for this page.
+    </p>
+  </template>
+</template>

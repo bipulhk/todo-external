@@ -1,0 +1,447 @@
+<template>
+  <p>Unitaid Annual Data Report - <strong>Overview</strong></p>
+  <br />
+  <p>Instructions: Complete the table below</p>
+  <br />
+
+  <!-- Table 1. Investment summary -->
+  <div class="slds-box slds-m-bottom_medium">
+    <h3 class="slds-text-heading_small slds-p-bottom_xx-small" style="color: rgb(95, 158, 160);">
+      Table 1. Investment summary
+    </h3>
+    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped" style="width: 100%;">
+      <tbody>
+        <tr>
+          <th scope="row" style="background-color: rgb(95, 158, 160); color: white; width: 40%;">Grant name</th>
+          <td style="width: 60%;">{projectName}</td>
+        </tr>
+        <tr>
+          <th scope="row" style="background-color: rgb(95, 158, 160); color: white; width: 40%;">Grant implementer name
+          </th>
+          <td style="width: 60%;">{accName}</td>
+        </tr>
+        <tr>
+          <th scope="row" style="background-color: rgb(95, 158, 160); color: white; width: 40%;">Grant start date</th>
+          <td style="width: 60%;">{projectStartDate}</td>
+        </tr>
+        <tr>
+          <th scope="row" style="background-color: rgb(95, 158, 160); color: white; width: 40%;">Grant end date
+            (current)</th>
+          <td style="width: 60%;">{projectEndDate}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table 2. Report summary -->
+  <div class="slds-box slds-m-bottom_medium">
+    <h3 class="slds-text-heading_small slds-p-bottom_xx-small" style="color: rgb(95, 158, 160);">
+      Table 2. Report summary
+    </h3>
+    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped" style="width: 100%;">
+      <tbody>
+        <tr>
+          <th scope="row" style="background-color: rgb(95, 158, 160); color: white; width: 40%;">Reporting period
+            covered</th>
+          <td style="width: 60%;">{arPeriod}</td>
+        </tr>
+        <tr>
+          <th scope="row" style="background-color: rgb(95, 158, 160); color: white; width: 40%;">Reporting year covered
+          </th>
+          <td style="width: 60%;">{arYear}</td>
+        </tr>
+        <tr>
+          <th scope="row" style="background-color: rgb(95, 158, 160); color: white; width: 40%;">Report approved by</th>
+          <td style="width: 60%;">{arApprover}</td>
+        </tr>
+        <tr>
+          <th scope="row" style="background-color: rgb(95, 158, 160); color: white; width: 40%;">Date report approved
+          </th>
+          <td style="width: 60%;">{arAprDate}</td>
+        </tr>
+        <tr>
+          <th scope="row" style="background-color: rgb(95, 158, 160); color: white; width: 40%;">Date report submitted
+            to Unitaid</th>
+          <td style="width: 60%;">{arSubDate}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table 3. Financial overview -->
+  <div class="slds-box slds-m-bottom_medium">
+    <h3 class="slds-text-heading_small slds-p-bottom_xx-small" style="color: rgb(95, 158, 160);">
+      Table 3. Financial overview
+    </h3>
+    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped" style="width: 100%;">
+      <tbody>
+        <tr>
+          <th scope="row" style="background-color: rgb(95, 158, 160); color: white; width: 40%;">Grant value/ceiling
+            (current)</th>
+          <td style="width: 60%;">{maxFundingCeiling}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Table 4. Implementer arrangements and financial accounting methods -->
+  <div class="slds-box slds-m-bottom_medium">
+    <h3 class="slds-text-heading_small slds-p-bottom_xx-small" style="color: rgb(95, 158, 160);">
+      Table 4. Implementer arrangements and financial accounting methods*
+    </h3>
+
+    <lightning-button 
+      label="Add Implementer" 
+      variant="brand" 
+      class="slds-m-bottom_small" 
+      onclick={handleAddFA}
+      disabled={isLoadingFA}>
+    </lightning-button>
+
+    <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped" style="width: 100%;">
+      <thead>
+        <tr style="background-color: rgb(95, 158, 160); color: white;">
+          <th style="width: 10%;">Implementer</th>
+          <th style="width: 25%;">Implementer Name</th>
+          <th style="width: 15%;">Type</th>
+          <th style="width: 10%;">Rank</th>
+          <th style="width: 20%;">Accounting Method</th>
+          <th style="width: 10%;">Functional Currency</th>
+          <th style="width: 10%;">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <template for:each={faRecords} for:item="rec">
+          <tr key={rec.Id}>
+            <!-- Implementer Auto Numbered -->
+            <td>{rec.implementer}</td>
+
+            <!-- Implementer Name: Summary Budget lookup as combobox -->
+            <td>
+              <lightning-combobox 
+                label="Implementer Name"
+                value={rec.uNI_SummaryBudget__c} 
+                placeholder="Select Implementer"
+                options={summaryBudgetOptions} 
+                data-id={rec.Id} 
+                data-field="uNI_SummaryBudget__c"
+                onchange={handleFAFieldChange} 
+                variant="label-hidden">
+              </lightning-combobox>
+            </td>
+
+            <!-- Type Picklist -->
+            <td>
+              <lightning-combobox 
+                label="Type"
+                value={rec.uNI_Type__c} 
+                placeholder="Select Type" 
+                options={typeOptions}
+                data-id={rec.Id} 
+                data-field="uNI_Type__c" 
+                onchange={handleFAFieldChange} 
+                variant="label-hidden">
+              </lightning-combobox>
+            </td>
+
+            <!-- Rank Picklist -->
+            <td>
+              <lightning-combobox 
+                label="Rank"
+                value={rec.uNI_Rank__c} 
+                placeholder="Select Rank" 
+                options={rankOptions}
+                data-id={rec.Id} 
+                data-field="uNI_Rank__c" 
+                onchange={handleFAFieldChange} 
+                variant="label-hidden">
+              </lightning-combobox>
+            </td>
+
+            <!-- Accounting Method -->
+            <td>
+              <lightning-combobox 
+                label="Accounting Method"
+                value={rec.uNI_AccountingMethod__c} 
+                placeholder="Select Method"
+                options={accMethodOptions} 
+                data-id={rec.Id} 
+                data-field="uNI_AccountingMethod__c"
+                onchange={handleFAFieldChange} 
+                variant="label-hidden">
+              </lightning-combobox>
+            </td>
+
+            <!-- Functional Currency -->
+            <td>
+              <lightning-combobox 
+                label="Functional Currency"
+                value={rec.uNI_FunctionalCurrency__c} 
+                placeholder="Select Currency"
+                options={faFuncCurrencyOptions} 
+                data-id={rec.Id} 
+                data-field="uNI_FunctionalCurrency__c"
+                onchange={handleFAFieldChange} 
+                variant="label-hidden">
+              </lightning-combobox>
+            </td>
+
+            <!-- Actions -->
+            <td>
+              <lightning-button-icon 
+                icon-name="utility:save" 
+                alternative-text="Save" 
+                title="Save" 
+                variant="brand"
+                data-id={rec.Id} 
+                onclick={handleSaveFA}
+                disabled={isLoadingFA}>
+              </lightning-button-icon>
+
+              <lightning-button-icon 
+                icon-name="utility:delete" 
+                alternative-text="Delete" 
+                title="Delete"
+                variant="destructive" 
+                data-id={rec.Id} 
+                onclick={handleDeleteFA} 
+                class="slds-m-left_xx-small"
+                disabled={isLoadingFA}>
+              </lightning-button-icon>
+            </td>
+          </tr>
+        </template>
+
+        <template if:false={faRecords.length}>
+          <tr>
+            <td colspan="7" class="slds-text-align_center">
+              No implementers added yet. Click "Add Implementer" to create one.
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+
+    <template if:true={isLoadingFA}>
+      <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+    </template>
+  </div>
+  <p class="slds-text-body_small slds-m-top_x-small">
+    *Note: Please list implementers up to the level of Tier 2 (Sub- of a Tier 1 Sub-implementer)
+    for amounts &gt; US$ 100,000
+  </p>
+
+  <!-- Table 5. Foreign currencies -->
+  <div class="slds-box slds-m-bottom_medium">
+    <h3 class="slds-text-heading_small slds-p-bottom_xx-small" style="color: rgb(95, 158, 160);">
+      Table 5. Foreign currencies (for lead grantee and consortium partners)
+    </h3>
+
+    <!-- Reporting Currency - Single selector for all records -->
+    <div class="slds-form-element slds-m-bottom_medium">
+      <label class="slds-form-element__label" for="reporting-currency">
+        <strong>Reporting Currency</strong>
+      </label>
+      <div class="slds-form-element__control" style="max-width: 300px;">
+        <lightning-combobox 
+          name="reportingCurrency" 
+          value={selectedReportingCurrency} 
+          placeholder="Choose currency"
+          options={reportingCurrencyOptions} 
+          onchange={handleReportingCurrencyChange}>
+        </lightning-combobox>
+      </div>
+    </div>
+
+    <lightning-button 
+      label="Add Foreign Exchange Rate" 
+      variant="brand" 
+      onclick={handleAddFX}
+      class="slds-m-bottom_small"
+      disabled={isLoadingFX}>
+    </lightning-button>
+
+    <template if:true={fxRates.length}>
+      <table class="slds-table slds-table_cell-buffer slds-table_bordered" style="width:100%;">
+        <thead>
+          <tr style="background-color: rgb(95,158,160); color:white;">
+            <th style="width: 25%;">Functional Currency</th>
+            <th style="width: 22%;">Budgeting US$ Forex</th>
+            <th style="width: 22%;">Reporting US$ Forex</th>
+            <th style="width: 18%;">Difference in %</th>
+            <th style="width: 13%;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template for:each={fxRates} for:item="fx">
+            <tr key={fx.Id}>
+              <td>
+                <lightning-combobox 
+                  label="Functional Currency"
+                  value={fx.uNI_FunctionalCurrency__c} 
+                  placeholder="Choose currency"
+                  options={functionalCurrencyOptions} 
+                  data-id={fx.Id} 
+                  data-field="uNI_FunctionalCurrency__c"
+                  onchange={handleFieldChange} 
+                  variant="label-hidden">
+                </lightning-combobox>
+              </td>
+              <td>
+                <lightning-input 
+                  label="Budgeting Forex"
+                  type="number" 
+                  value={fx.uNI_BudgetingForex__c} 
+                  data-id={fx.Id}
+                  data-field="uNI_BudgetingForex__c" 
+                  onchange={handleFieldChange} 
+                  formatter="decimal" 
+                  step="0.0001"
+                  variant="label-hidden">
+                </lightning-input>
+              </td>
+              <td>
+                <lightning-input 
+                  label="Reporting Forex"
+                  type="number" 
+                  value={fx.uNI_ReportingForex__c} 
+                  data-id={fx.Id}
+                  data-field="uNI_ReportingForex__c" 
+                  onchange={handleFieldChange} 
+                  formatter="decimal" 
+                  step="0.0001"
+                  variant="label-hidden">
+                </lightning-input>
+              </td>
+              <td>{fx.difference}</td>
+              <td>
+                <lightning-button-icon 
+                  icon-name="utility:save" 
+                  alternative-text="Save" 
+                  title="Save" 
+                  variant="brand"
+                  data-id={fx.Id} 
+                  onclick={handleSaveFX} 
+                  disabled={isLoadingFX}>
+                </lightning-button-icon>
+                <lightning-button-icon 
+                  icon-name="utility:delete" 
+                  alternative-text="Delete" 
+                  title="Delete"
+                  variant="destructive" 
+                  data-id={fx.Id} 
+                  onclick={handleDeleteFX} 
+                  disabled={isLoadingFX}
+                  class="slds-m-left_xx-small">
+                </lightning-button-icon>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </template>
+
+    <template if:false={fxRates.length}>
+      <p class="slds-text-body_regular slds-m-top_small">No foreign exchange rates added yet. Click "Add Foreign
+        Exchange Rate" to create one.</p>
+    </template>
+
+    <template if:true={isLoadingFX}>
+      <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+    </template>
+  </div>
+
+  <!-- Table 6. Co-funding -->
+  <div class="slds-box slds-m-bottom_medium">
+    <h3 class="slds-text-heading_small slds-p-bottom_xx-small" style="color: rgb(95,158,160);">
+      Table 6. Co-funding
+    </h3>
+
+    <lightning-button 
+      label="Add Co-funding" 
+      variant="brand" 
+      class="slds-m-bottom_small" 
+      onclick={handleAddCF}
+      disabled={isLoadingCF}>
+    </lightning-button>
+
+    <table class="slds-table slds-table_bordered slds-table_cell-buffer" style="width: 100%;">
+      <thead>
+        <tr style="background-color: rgb(95,158,160); color:white;">
+          <th style="width: 30%;">Source of co-funding (if any)</th>
+          <th style="width: 55%;">Update on status</th>
+          <th style="width: 15%;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <template for:each={coFundingRecords} for:item="rec">
+          <tr key={rec.Id}>
+            <td>
+              <lightning-input 
+                label="Source" 
+                type="text" 
+                value={rec.uNI_SourcesOfCofunding__c} 
+                data-id={rec.Id}
+                data-field="uNI_SourcesOfCofunding__c" 
+                onchange={handleCFFieldChange}
+                variant="label-hidden">
+              </lightning-input>
+            </td>
+            <td>
+              <lightning-textarea 
+                label="Status" 
+                value={rec.uNI_UpdateOnStatus__c} 
+                data-id={rec.Id} 
+                data-field="uNI_UpdateOnStatus__c"
+                onchange={handleCFFieldChange}
+                variant="label-hidden">
+              </lightning-textarea>
+            </td>
+            <td>
+              <lightning-button-icon 
+                icon-name="utility:save" 
+                variant="brand" 
+                class="slds-m-right_xx-small"
+                alternative-text="Save" 
+                title="Save"
+                data-id={rec.Id} 
+                onclick={handleSaveCF}
+                disabled={isLoadingCF}>
+              </lightning-button-icon>
+
+              <lightning-button-icon 
+                icon-name="utility:delete" 
+                variant="destructive" 
+                alternative-text="Delete"
+                title="Delete"
+                data-id={rec.Id} 
+                onclick={handleDeleteCF}
+                disabled={isLoadingCF}>
+              </lightning-button-icon>
+            </td>
+          </tr>
+        </template>
+
+        <template if:false={coFundingRecords.length}>
+          <tr>
+            <td colspan="3" class="slds-text-align_center">
+              No Co-funding records yet.
+            </td>
+          </tr>
+        </template>
+      </tbody>
+    </table>
+
+    <template if:true={isLoadingCF}>
+      <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+    </template>
+  </div>
+  <p class="slds-text-body_small slds-m-top_x-small">
+    **Note: According to the Unitaid Standard Terms and Conditions, "co-funding" is funding secured
+    from other funding sources in addition to Unitaid funding to achieve the grant outputs.
+    "Complementary funding," on the other hand, is funding secured in addition to Unitaid funding to finance
+    activities that will support but not directly contribute to the achievement of grant outputs.
+  </p>
+
+</template>

@@ -329,3 +329,65 @@ If you want, I can also:
 2) run the flow for `a19FT000001xRMzYAM` to regenerate using the fixed logic.
 
 ---
+
+
+**User**
+
+i can still see the output 4,5, 6 which are empty and make no sense, can awe please remove them from the tables??
+<image></image>
+
+---
+
+
+**User**
+
+i can still see the output 4,5, 6 which are empty and make no sense, can awe please remove them from the tables??
+
+---
+
+
+**OpenAI Codex**
+
+Yes — I removed the empty trailing outputs directly in the LWCs so they won’t render if there’s no data for them.
+
+What changed
+- Table 3/4/5 now compute the **highest output index that has any non‑zero projected or actual value**, and cap the column count to that.
+- This trims Output 4/5/6 when they’re empty, while keeping Outputs 1–3.
+
+Files updated
+- `force-app/main/default/lwc/uNITableThreeARBudget/uNITableThreeARBudget.js`
+- `force-app/main/default/lwc/uNITableFourARBudget/uNITableFourARBudget.js`
+- `force-app/main/default/lwc/uNITableFiveARBudget/uNITableFiveARBudget.js`
+
+Behavior notes
+- If *all* outputs are zero (fresh AR with no data yet), it will still show the server count (so you don’t end up with no columns).
+- If outputs 1–3 have data and 4–6 are empty, it trims to 3 as expected.
+
+Next steps (if you want)
+1) I can also add the same trimming logic server‑side in the controllers for extra safety.  
+2) I can re-run the Annual Report flow to regenerate expense types with the fixed mapping.
+
+---
+
+
+**User**
+
+table 6 pls
+
+---
+
+
+**OpenAI Codex**
+
+Done. Table 6 now trims empty trailing outputs the same way as Tables 3–5.
+
+Updated file
+- `force-app/main/default/lwc/uNITableSixARBudget/uNITableSixARBudget.js`
+
+Behavior
+- If Outputs 4–6 are empty across all rows, they won’t render.
+- If everything is empty (fresh AR), it will still show the controller count so the table isn’t blank.
+
+If you want me to push the same “max used output” trimming into the Table 6 Apex controller (for consistency), say the word.
+
+---

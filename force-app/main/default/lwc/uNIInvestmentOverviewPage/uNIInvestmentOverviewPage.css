@@ -1,0 +1,31 @@
+.detail-card {
+  border: 1px solid #d8dde6;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 12px 8px;
+}
+
+.detail-row {
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: #3e3e3c;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding-right: 8px;
+}
+
+.detail-value :global(.slds-form-element) {
+  margin-bottom: 0;
+}
+
+.detail-value :global(.slds-form-element__control) {
+  padding-top: 0;
+}
