@@ -98,6 +98,7 @@ export default class UNI_ReprogrammingRequestsPortal extends NavigationMixin(Lig
                 const mapped = await Promise.all(
                     rows.map(async r => ({
                         ...r,
+                        // Generate a community-safe URL for the Id column (avoid "/{Id}" invalid page).
                         recordLink: await this._buildRecordLink(r.Id)
                     }))
                 );

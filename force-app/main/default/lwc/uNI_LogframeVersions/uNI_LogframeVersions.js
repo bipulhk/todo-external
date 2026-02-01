@@ -110,12 +110,11 @@ export default class LogframeManagement extends LightningElement {
     // unified editability: editable if server says so, OR we’re viewing a non-live version
     get canEdit() {
         const serverSays = !!this.isEditableLogframe;
-        const viewedVersion = (this.selectedVersion && this.selectedVersion.trim())
-            ? this.selectedVersion
-            : (this.latestVersion || '');
-        const haveBoth = !!this.liveVersion && !!viewedVersion;
-        const viewingNonLive = haveBoth && (this.liveVersion !== viewedVersion);
-        const baseEditable = serverSays || viewingNonLive;
+        // If logframe is finalized (server says false), never allow edits.
+        if (!serverSays) {
+            return false;
+        }
+        const baseEditable = serverSays;
 
         // In Reprogramming Request context, block edits if RR version == IA live version
         if (this.contextObjectApiName === 'uNI_ReprogrammingRequest__c') {
@@ -142,6 +141,7 @@ export default class LogframeManagement extends LightningElement {
             const attrs = pageRef.attributes || {};
             console.log('[Logframe] pageRef.state', JSON.stringify(state));
             console.log('[Logframe] pageRef.attributes', JSON.stringify(attrs));
+            // Experience Cloud may supply recordId in attributes or state; prefer explicit c__recordId when provided.
             this.urlInvestmentId =
                 state.c__recordId ||
                 state.recordId ||
@@ -290,6 +290,7 @@ export default class LogframeManagement extends LightningElement {
             this.indicators = data.indicators;
             this.fieldsMap = data.fieldsMap;
             this.isEditableLogframe = data.isEditableLogframe;
+            // Live version is returned by Apex to avoid UI API errors for external users.
             this.liveVersion = data.liveVersion;
             this.iaDefaultLoaded = true;
             this._attemptSetDefaultVersion();
@@ -546,7 +547,7 @@ export default class LogframeManagement extends LightningElement {
 
     // ===== Actions: add / rename / delete =====
     handleMakeReadOnly() {
-        setLogframeAsReadOnly({ recordId: this.recordId })
+        setLogframeAsReadOnly({ recordId: this.recordId, version: this.currentVersion })
             .then(() => refreshApex(this.wiredOutputs))
             .then(() => this.showReadOnlyToast())
             .catch(e => console.error('Error making read only logframe :', e));

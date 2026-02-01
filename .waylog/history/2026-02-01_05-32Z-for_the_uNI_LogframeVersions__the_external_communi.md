@@ -443,3 +443,122 @@ Recommended fix (safe):
 If you want me to implement that change, say the word.
 
 ---
+
+
+**User**
+
+sure go ahead.
+
+---
+
+
+**OpenAI Codex**
+
+Done. I updated `createUpdateRecord` to coerce any incoming `recordId` (IA or Reprogramming Request) into the IA id before querying logframes.
+
+Change:
+- `force-app/main/default/classes/uNI_LogframeController.cls`
+  - `createUpdateRecord` now uses `coerceToIaId(recordId)` for:
+    - version lookup
+    - logframe lookup
+    - setting `uNI_IndividualApplication__c` on Output
+  - If `recordId` can’t be resolved to an IA, it throws a clear error.
+
+This will prevent the “No logframe found for version X” error when the LWC passes an RR id.
+
+If you want, I can also add a small debug log here or add a similar coercion for other methods.
+
+---
+
+
+**User**
+
+also always add simple comments so that i know what was changed and how its working.
+
+---
+
+
+**OpenAI Codex**
+
+Added simple comments at the exact spots where behavior changed so it’s clear what’s new and why.
+
+Updated files:
+- `force-app/main/default/classes/uNI_LogframeController.cls`
+- `force-app/main/default/lwc/uNI_LogframeVersions/uNI_LogframeVersions.js`
+- `force-app/main/default/lwc/uNI_ReprogrammingRequestsPortal/uNI_ReprogrammingRequestsPortal.js`
+
+I’ll keep adding short “what/why” comments on changes going forward.
+
+---
+
+
+**User**
+
+when i try to save the logframe as final im getting this error 
+
+VM5085:3 Error making read only logframe : 
+{status: 500, body: {…}, headers: {…}, ok: false, statusText: 'Server Error', …}
+body
+: 
+exceptionType
+: 
+"System.QueryException"
+isUserDefinedException
+: 
+false
+message
+: 
+"List has no rows for assignment to SObject"
+stackTrace
+: 
+"Class.uNI_LogframeController.setLogframeAsReadOnly: line 452, column 1"
+[[Prototype]]
+: 
+Object
+errorType
+: 
+"fetchResponse"
+
+---
+
+
+**OpenAI Codex**
+
+The error came from `setLogframeAsReadOnly` querying by `recordId` directly (RR id in community), so the SOQL returned 0 rows and threw a QueryException. I updated it to resolve the IA id and lock the **specific version being viewed**.
+
+Changes
+- `force-app/main/default/classes/uNI_LogframeController.cls`
+  - `setLogframeAsReadOnly` now accepts `(recordId, version)`
+  - Resolves IA id from RR/IA id
+  - Uses provided version (or latest if blank)
+  - Throws a clear error if the version doesn’t exist
+  - Added a simple comment describing the change
+- `force-app/main/default/lwc/uNI_LogframeVersions/uNI_LogframeVersions.js`
+  - Passes `version: this.currentVersion` when calling `setLogframeAsReadOnly`
+
+This should stop the “List has no rows” error and correctly lock the selected logframe version.
+
+If you want, I can also add a short user-facing toast when the version is missing instead of a console error.
+
+---
+
+
+**User**
+
+okay so once the logframe is finalized the grantee(external user) should not be able to able to edit the logframe anymore.
+
+---
+
+
+**OpenAI Codex**
+
+Updated `canEdit` so once a logframe is finalized (`uNI_IsEditableLogframe__c = false`), **no edits are allowed** — including for external users — regardless of version selection.
+
+Change:
+- `force-app/main/default/lwc/uNI_LogframeVersions/uNI_LogframeVersions.js`
+  - Added a simple guard: if `isEditableLogframe` is false, return false immediately.
+  - Comment explains the behavior.
+
+This enforces your requirement: after “Save Logframe as Final”, the grantee can view but cannot edit.
+
+---

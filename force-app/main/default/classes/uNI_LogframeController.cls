@@ -448,13 +448,41 @@ private static Map<String, Object> assembleDtoForIaAndLogframe(IndividualApplica
     // -------------------------
 
     @AuraEnabled
-    public static void setLogframeAsReadOnly(Id recordId) {
-        uNI_Logframe__c logFrameRecord = [
+    public static void setLogframeAsReadOnly(Id recordId, String version) {
+        // Accept IA or Reprogramming Request id; lock the requested logframe version for that IA.
+        Id iaId = coerceToIaId(recordId);
+        if (iaId == null) {
+            throw new AuraHandledException('Invalid recordId. Expected Individual Application or Reprogramming Request.');
+        }
+
+        String v = version;
+        if (String.isBlank(v)) {
+            // If version is not provided, lock the latest available version.
+            List<AggregateResult> maxV = [
+                SELECT uNI_LogframeVersion__c v
+                FROM uNI_Logframe__c
+                WHERE uNI_Individual_Application__c = :iaId
+                      AND uNI_LogframeVersion__c != null
+                GROUP BY uNI_LogframeVersion__c
+                ORDER BY uNI_LogframeVersion__c DESC
+                LIMIT 1
+            ];
+            v = maxV.isEmpty() ? '1' : (String)maxV[0].get('v');
+        }
+
+        List<uNI_Logframe__c> logframes = [
             SELECT Id, uNI_Individual_Application__c, uNI_ProjectYears__c, uNI_IsEditableLogframe__c
             FROM uNI_Logframe__c
-            WHERE uNI_Individual_Application__c = :recordId
+            WHERE uNI_Individual_Application__c = :iaId
+              AND uNI_LogframeVersion__c = :v
+            ORDER BY CreatedDate DESC
             LIMIT 1
         ];
+        if (logframes.isEmpty()) {
+            throw new AuraHandledException('No logframe found for version ' + v + ' under this application.');
+        }
+
+        uNI_Logframe__c logFrameRecord = logframes[0];
         logFrameRecord.uNI_IsEditableLogframe__c = false;
         update logFrameRecord;
     }
@@ -523,15 +551,20 @@ public static void createUpdateRecord(
     String operation,           // 'Create' | 'Update'
     String version              // may be null/'' => resolve to latest
 ) {
+    // Allow IA or Reprogramming Request id; always work with IA id internally.
+    Id iaId = coerceToIaId(recordId);
     // --- Resolve target version for CREATE only (UPDATE doesn't need version) ---
     String v = version;
     if (operation == 'Create') {
+        if (iaId == null) {
+            throw new AuraHandledException('Invalid recordId. Expected Individual Application or Reprogramming Request.');
+        }
         if (String.isBlank(v)) {
             // pick latest logframe version for this IA
             List<AggregateResult> maxV = [
                 SELECT uNI_LogframeVersion__c v
                 FROM uNI_Logframe__c
-                WHERE uNI_Individual_Application__c = :recordId
+                WHERE uNI_Individual_Application__c = :iaId
                       AND uNI_LogframeVersion__c != null
                 GROUP BY uNI_LogframeVersion__c
                 ORDER BY uNI_LogframeVersion__c DESC
@@ -544,7 +577,7 @@ public static void createUpdateRecord(
         List<uNI_Logframe__c> lfList = [
             SELECT Id
             FROM uNI_Logframe__c
-            WHERE uNI_Individual_Application__c = :recordId
+            WHERE uNI_Individual_Application__c = :iaId
               AND uNI_LogframeVersion__c = :v
             ORDER BY CreatedDate DESC
             LIMIT 1
@@ -568,7 +601,7 @@ public static void createUpdateRecord(
                 uNI_OutputTitle__c = title,
                 uNI_LogframeVersion__c = v
             );
-              rec.uNI_IndividualApplication__c = recordId;
+              rec.uNI_IndividualApplication__c = iaId;
             insert rec;
         } else {
             throw new AuraHandledException('Unsupported type for create: ' + String.valueOf(type));
