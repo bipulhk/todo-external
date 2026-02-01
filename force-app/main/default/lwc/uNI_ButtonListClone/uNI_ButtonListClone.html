@@ -1,0 +1,80 @@
+<template>
+    <div class="slds-grid slds-grid_align-end slds-m-top_medium" style="margin-right: 5rem;">
+        <template for:each={allmenus} for:item="menu">
+            <lightning-button-menu
+                key={menu.label}
+                label={menu.label}
+                alternative-text={menu.label}
+                data-menu={menu.label}
+                class="slds-m-right_small"
+                onselect={handleAction}
+            >
+                <template for:each={menu.actions} for:item="action">
+                    <lightning-menu-item
+                        key={action.label}
+                        value={action.value}
+                        
+                        label={action.label}>
+                    </lightning-menu-item>
+                </template>
+            </lightning-button-menu>
+        </template>
+    </div>
+
+    <!-- Flow / Record Modal -->
+    <template if:true={isFlowOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        onclick={closeFlow}>
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    </button>
+                    <h2 class="slds-text-heading_medium">{flowHeader}</h2>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <template if:false={isRecordForm}>
+                        <lightning-flow
+                            flow-api-name={selectedFlow}
+                            flow-input-variables={inputVariables}
+                            onstatuschange={handleFlowStatus}>
+                        </lightning-flow>
+                    </template>
+
+                    <template if:true={isRecordForm}>
+                        <lightning-record-edit-form
+                            object-api-name={recordObjectApiName}
+                            onsubmit={handleSubmit}
+                            onsuccess={handleRecordSuccess}>
+                            <template for:each={recordFields} for:item="field">
+                                <lightning-input-field key={field} field-name={field}></lightning-input-field>
+                            </template>
+                            <lightning-button type="submit" label="Save"></lightning-button>
+                        </lightning-record-edit-form>
+                    </template>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <!-- Feedback Modal -->
+    <template if:true={showFeedbackForm}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                        onclick={closeFlow}>
+                        <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    </button>
+                    <h2 class="slds-text-heading_medium">Provide Feedback</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <c-u-n-i_-feedback-form record-id={recordId}></c-u-n-i_-feedback-form>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>
