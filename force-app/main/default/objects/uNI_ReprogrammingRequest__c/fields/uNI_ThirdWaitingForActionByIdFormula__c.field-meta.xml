@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>uNI_ThirdWaitingForActionByIdFormula__c</fullName>
+    <externalId>false</externalId>
+    <formula>IF( Text(uNI_ThirdActionOwnerName__c)=&apos;PM/PO&apos;,uNI_Investment__r.uNI_ProgramOfficerUserIds__c+&apos;,&apos;+uNI_Investment__r.uNI_ProjectManagerUserIds__c,
+IF( Text(uNI_ThirdActionOwnerName__c)=&apos;Grantee&apos;, uNI_Investment__r.uNI_ProjectTeamUserIds__c,
+IF( Text(uNI_ThirdActionOwnerName__c)=&apos;GAM&apos;, uNI_Investment__r.uNI_GAM__c ,
+IF( Text(uNI_ThirdActionOwnerName__c)=&apos;GAM&apos;, uNI_Investment__r.uNI_GAM__c ,
+IF( Text(uNI_ThirdActionOwnerName__c)=&apos;PRC&apos;,uNI_PRCLeadMember__c +&apos;,&apos;+uNI_PRCIds__c ,
+IF( AND(Text(uNI_ThirdActionOwnerName__c)=&apos;PT&apos;,uNI_HasAllPTClearedSMTPackage__c), uNI_Investment__r.uNI_ProjectTeamUserIds__c,
+IF( Text(uNI_ThirdActionOwnerName__c)=&apos;SMT&apos;,uNI_SMTMemberIds__c ,
+uNI_ThirdWaitingforActionByIds__c)))))))</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Third Waiting For Action By id Formula</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

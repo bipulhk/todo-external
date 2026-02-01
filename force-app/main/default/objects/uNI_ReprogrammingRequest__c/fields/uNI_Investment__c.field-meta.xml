@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>uNI_Investment__c</fullName>
+    <description>The master detail relation between the Investment and the Reprogramming request</description>
+    <label>Investment</label>
+    <referenceTo>IndividualApplication</referenceTo>
+    <relationshipLabel>Reprogramming Requests</relationshipLabel>
+    <relationshipName>Reprogramming_Requests</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

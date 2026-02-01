@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>uNI_FacesheetCVIds__c</fullName>
+    <description>stores the Facesheet CV ids for the the reprogramming requests</description>
+    <externalId>false</externalId>
+    <label>Facesheet CV Ids</label>
+    <length>255</length>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

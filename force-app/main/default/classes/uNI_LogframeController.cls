@@ -43,9 +43,12 @@ private static Boolean isCurrentUserSystemAdmin() {
     // === NEW: load the logframe DTO by selected version ('' or null -> latest) ===
 @AuraEnabled(cacheable=true)
 public static Map<String, Object> getRelatedRecordsByVersion(Id applicationId, String version) {
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getRelatedRecordsByVersion] start applicationId=' + applicationId + ', version=' + version + ', userId=' + UserInfo.getUserId());
     // Defensive: allow being called with a Reprogramming Request Id
     Id iaId = coerceToIaId(applicationId);
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getRelatedRecordsByVersion] resolved iaId=' + iaId);
     if (iaId == null) {
+        System.debug(LoggingLevel.WARN, '[uNI_LogframeController.getRelatedRecordsByVersion] iaId is null; returning empty DTO.');
         return new Map<String,Object>{
             'outcomes' => new List<uNI_PortfolioOutcomes__c>(),
             'outputs' => new List<uNI_PortfolioOutput__c>(),
@@ -70,10 +73,12 @@ public static Map<String, Object> getRelatedRecordsByVersion(Id applicationId, S
         ];
         versionToFetch = maxV.isEmpty() ? '1' : (String)maxV[0].get('v');
     }
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getRelatedRecordsByVersion] versionToFetch=' + versionToFetch);
 
     Map<String, Object> dto = new Map<String, Object>();
     Id currentUserId = UserInfo.getUserId();
     String yearsFieldsFromLabel = Label.uNI_Project_Year_Logframe;
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getRelatedRecordsByVersion] yearsFieldsFromLabel=' + yearsFieldsFromLabel);
 
     // ---- Load IA safely
     List<IndividualApplication> iaRows = [
@@ -84,6 +89,7 @@ public static Map<String, Object> getRelatedRecordsByVersion(Id applicationId, S
         WHERE Id = :iaId
         LIMIT 1
     ];
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getRelatedRecordsByVersion] iaRows.size=' + iaRows.size());
     if (iaRows.isEmpty()) {
         // IA missing — return empty dto (no exception to the UI)
         dto.put('isEditableLogframe', false);
@@ -114,6 +120,7 @@ public static Map<String, Object> getRelatedRecordsByVersion(Id applicationId, S
         ORDER BY CreatedDate DESC
         LIMIT 1
     ];
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getRelatedRecordsByVersion] logframes.size=' + logframes.size());
     if (logframes.isEmpty()) {
         dto.put('isEditableLogframe', false);
         dto.put('outcomes', new List<uNI_PortfolioOutcomes__c>());
@@ -125,6 +132,7 @@ public static Map<String, Object> getRelatedRecordsByVersion(Id applicationId, S
     uNI_Logframe__c logFrameRecord = logframes[0];
     dto.put('projectyears', logFrameRecord.uNI_ProjectYears__c);
     String realLogframeversion = [select id, Name, uNI_LogframeVersion__c from uNI_Logframe__c where Id =: logframes limit 1].uNI_LogframeVersion__c;
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getRelatedRecordsByVersion] logFrameRecord.Id=' + logFrameRecord.Id + ', realLogframeversion=' + realLogframeversion);
 
 
     // Use bind variable for dynamic query
@@ -162,6 +170,7 @@ public static Map<String, Object> getRelatedRecordsByVersion(Id applicationId, S
             outputs.remove(i);
         }
     }
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getRelatedRecordsByVersion] outcomes.size=' + outcomes.size() + ', outputs.size=' + outputs.size());
 
 
     Set<Id> outcomesIds = (new Map<Id,uNI_PortfolioOutcomes__c>(outcomes)).keySet();
@@ -181,6 +190,7 @@ public static Map<String, Object> getRelatedRecordsByVersion(Id applicationId, S
     List<uNI_Indicator__c> allIndicators = new List<uNI_Indicator__c>();
     allIndicators.addAll(outcomesIndicators);
     allIndicators.addAll(outputsIndicators);
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getRelatedRecordsByVersion] indicators.size=' + allIndicators.size());
 
     dto.put('outcomes', outcomes);
     dto.put('outputs', outputs);
@@ -194,14 +204,17 @@ public static Map<String, Object> getRelatedRecordsByVersion(Id applicationId, S
 
     Boolean finalIsEditableStatus = logFrameRecord.uNI_IsEditableLogframe__c && isCurrentUserAuthorized;
     dto.put('isEditableLogframe', finalIsEditableStatus);
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getRelatedRecordsByVersion] isEditableLogframe=' + finalIsEditableStatus);
 
     return dto;
 }
 
 // Helper: coerce any incoming Id to the IA Id (supports Reprogramming Request)
 private static Id coerceToIaId(Id incomingId) {
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.coerceToIaId] incomingId=' + incomingId);
     if (incomingId == null) return null;
     Schema.SObjectType t = incomingId.getSObjectType();
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.coerceToIaId] sObjectType=' + String.valueOf(t));
     if (t == IndividualApplication.SObjectType) return incomingId;
 
     // If the caller accidentally passed a Reprogramming Request Id
@@ -212,6 +225,7 @@ private static Id coerceToIaId(Id incomingId) {
             WHERE Id = :incomingId
             LIMIT 1
         ];
+        System.debug(LoggingLevel.INFO, '[uNI_LogframeController.coerceToIaId] rr rows.size=' + rows.size());
         return rows.isEmpty() ? null : rows[0].uNI_Investment__c;
     }
     // Unknown type — try using as-is (may still be an IA Id string)
@@ -224,6 +238,7 @@ private static Id coerceToIaId(Id incomingId) {
        // === NEW: return distinct versions available for an IA (sorted descending) ===
 @AuraEnabled(cacheable=true)
 public static List<String> getAvailableLogframeVersions(Id applicationId) {
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getAvailableLogframeVersions] applicationId=' + applicationId);
     if (applicationId == null) return new List<String>();
 
     // Get distinct, non-null versions for this IA
@@ -241,6 +256,7 @@ public static List<String> getAvailableLogframeVersions(Id applicationId) {
         String v = (String)ar.get('v');
         if (!String.isBlank(v)) versions.add(v);
     }
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getAvailableLogframeVersions] versions=' + versions);
 
     // If none found, but a logframe exists without version, default to '1'
     if (versions.isEmpty()) {
@@ -249,6 +265,7 @@ public static List<String> getAvailableLogframeVersions(Id applicationId) {
             FROM uNI_Logframe__c
             WHERE uNI_Individual_Application__c = :applicationId
         ];
+        System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getAvailableLogframeVersions] version list empty; logframe count=' + cnt);
         if (cnt > 0) {
             versions.add('1');
         }
@@ -925,6 +942,7 @@ public static void saveRecords(String dataTableRecords, String updatedValues, Id
 
 @AuraEnabled(cacheable=true)
 public static Integer getProjectYearsForContext(Id contextId) {
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getProjectYearsForContext] contextId=' + contextId);
     if (contextId == null) return null;
 
     Schema.SObjectType sType = contextId.getSObjectType();
@@ -936,6 +954,7 @@ public static Integer getProjectYearsForContext(Id contextId) {
             WHERE Id = :contextId
             LIMIT 1
         ];
+        System.debug(LoggingLevel.INFO, '[uNI_LogframeController.getProjectYearsForContext] rr.uNI_ProjectYears__c=' + rr.uNI_ProjectYears__c);
 
         return rr.uNI_ProjectYears__c != null 
             ? rr.uNI_ProjectYears__c.intValue() 
@@ -948,21 +967,24 @@ public static Integer getProjectYearsForContext(Id contextId) {
 
     // bipul new
     @AuraEnabled(cacheable=true)
-    public static Id resolveInvestmentId(Id contextId) {
-        if (contextId == null) return null;
+public static Id resolveInvestmentId(Id contextId) {
+    System.debug(LoggingLevel.INFO, '[uNI_LogframeController.resolveInvestmentId] contextId=' + contextId);
+    if (contextId == null) return null;
 
         Schema.SObjectType sType = contextId.getSObjectType();
 
-        if (sType == IndividualApplication.SObjectType) {
-            return contextId;
-        } else if (sType == uNI_ReprogrammingRequest__c.SObjectType) {
-            return [
-                SELECT uNI_Investment__c
-                FROM uNI_ReprogrammingRequest__c
-                WHERE Id = :contextId
-                LIMIT 1
-            ].uNI_Investment__c;
-        }
+    if (sType == IndividualApplication.SObjectType) {
+        System.debug(LoggingLevel.INFO, '[uNI_LogframeController.resolveInvestmentId] context is IndividualApplication');
+        return contextId;
+    } else if (sType == uNI_ReprogrammingRequest__c.SObjectType) {
+        System.debug(LoggingLevel.INFO, '[uNI_LogframeController.resolveInvestmentId] context is uNI_ReprogrammingRequest__c');
+        return [
+            SELECT uNI_Investment__c
+            FROM uNI_ReprogrammingRequest__c
+            WHERE Id = :contextId
+            LIMIT 1
+        ].uNI_Investment__c;
+    }
         // Add more child objects here if needed
         return null;
     }

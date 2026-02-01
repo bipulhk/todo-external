@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>uNI_CurrentActionOwnerTask__c</fullName>
+    <externalId>false</externalId>
+    <formula>IF(
+  AND(
+    uNI_IsUserActionOwner__c,
+    uNI_IsUserSecondaryOwner__c,
+    uNI_IsUserThirdActionOwner__c
+  ),
+  uNI_CurrentPendingTask__c &amp; BR() &amp;
+  uNI_SecondaryCurrentPendingTask__c &amp; BR() &amp;
+  uNI_ThirdCurrentPendingTask__c,
+
+  IF(
+    AND(uNI_IsUserActionOwner__c, uNI_IsUserSecondaryOwner__c),
+    uNI_CurrentPendingTask__c &amp; BR() &amp;
+    uNI_SecondaryCurrentPendingTask__c,
+
+    IF(
+      AND(uNI_IsUserActionOwner__c, uNI_IsUserThirdActionOwner__c),
+      uNI_CurrentPendingTask__c &amp; BR() &amp;
+      uNI_ThirdCurrentPendingTask__c,
+
+      IF(
+        AND(uNI_IsUserSecondaryOwner__c, uNI_IsUserThirdActionOwner__c),
+        uNI_SecondaryCurrentPendingTask__c &amp; BR() &amp;
+        uNI_ThirdCurrentPendingTask__c,
+
+        IF(
+          uNI_IsUserActionOwner__c,
+          uNI_CurrentPendingTask__c,
+
+          IF(
+            uNI_IsUserSecondaryOwner__c,
+            uNI_SecondaryCurrentPendingTask__c,
+
+            IF(
+              uNI_IsUserThirdActionOwner__c,
+              uNI_ThirdCurrentPendingTask__c,
+              &quot;&quot;
+            )
+          )
+        )
+      )
+    )
+  )
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Current Action Owner Task</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

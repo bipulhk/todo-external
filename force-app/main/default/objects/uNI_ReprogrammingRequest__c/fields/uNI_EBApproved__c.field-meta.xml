@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>uNI_EBApproved__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Checkbox to track if the proposal is EB approved or not.</description>
+    <label>EB Approved</label>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

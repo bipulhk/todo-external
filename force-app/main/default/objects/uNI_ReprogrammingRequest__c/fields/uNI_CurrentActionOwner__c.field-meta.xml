@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>uNI_CurrentActionOwner__c</fullName>
+    <label>Current Action Owner</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Unitaid</fullName>
+                <default>false</default>
+                <label>Unitaid</label>
+            </value>
+            <value>
+                <fullName>Implementer</fullName>
+                <default>false</default>
+                <label>Implementer</label>
+            </value>
+            <value>
+                <fullName>PM/PO</fullName>
+                <default>false</default>
+                <label>PM/PO</label>
+            </value>
+            <value>
+                <fullName>PRC</fullName>
+                <default>false</default>
+                <label>PRC</label>
+            </value>
+            <value>
+                <fullName>Grantee</fullName>
+                <default>false</default>
+                <label>Grantee</label>
+            </value>
+            <value>
+                <fullName>Strategy</fullName>
+                <default>false</default>
+                <label>Strategy</label>
+            </value>
+            <value>
+                <fullName>Senior Legal Officer</fullName>
+                <default>false</default>
+                <label>Senior Legal Officer</label>
+            </value>
+            <value>
+                <fullName>Director PD</fullName>
+                <default>false</default>
+                <label>Director PD</label>
+            </value>
+            <value>
+                <fullName>GAM</fullName>
+                <default>false</default>
+                <label>GAM</label>
+            </value>
+            <value>
+                <fullName>PT</fullName>
+                <default>false</default>
+                <label>PT</label>
+            </value>
+            <value>
+                <fullName>SMT</fullName>
+                <default>false</default>
+                <label>SMT</label>
+            </value>
+            <value>
+                <fullName>ED</fullName>
+                <default>false</default>
+                <label>ED</label>
+            </value>
+            <value>
+                <fullName>EB</fullName>
+                <default>false</default>
+                <label>EB</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
