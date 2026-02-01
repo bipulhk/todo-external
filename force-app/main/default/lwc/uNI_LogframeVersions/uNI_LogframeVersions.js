@@ -4,9 +4,8 @@ import { refreshApex } from '@salesforce/apex';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 
-// IA (live) version field
-import LIVE_LOGFRAME_VERSION from '@salesforce/schema/IndividualApplication.uNI_LogframeVersion__c';
 import RR_LOGFRAME_VERSION from '@salesforce/schema/uNI_ReprogrammingRequest__c.uNI_LogframeVersion__c';
+import RR_INVESTMENT_FIELD from '@salesforce/schema/uNI_ReprogrammingRequest__c.uNI_Investment__c';
 
 import getRelatedRecordsByVersion
     from '@salesforce/apex/uNI_LogframeController.getRelatedRecordsByVersion';
@@ -29,8 +28,6 @@ import getIndicatorIndexFromParentId
     from '@salesforce/apex/uNI_LogframeController.getIndicatorIndexFromParentId';
 import setLogframeAsReadOnly
     from '@salesforce/apex/uNI_LogframeController.setLogframeAsReadOnly';
-import resolveInvestmentId
-    from '@salesforce/apex/uNI_LogframeController.resolveInvestmentId';
 import getObjectApiName
     from '@salesforce/apex/uNI_ReprogrammingObjectCheck.getObjectApiName';
 
@@ -74,7 +71,7 @@ export default class LogframeManagement extends LightningElement {
     // internal state
     effectiveInvestmentId;
     urlInvestmentId;
-    _resolvedFromContext;
+    rrInvestmentId;
     _selectedIndicatorRow;
     recordIdToBeRenamed;
     recordIndicatorIdToUpdate;
@@ -140,10 +137,23 @@ export default class LogframeManagement extends LightningElement {
     // ===== URL / context resolution =====
     @wire(CurrentPageReference)
     getStateParameters(pageRef) {
-        if (pageRef && pageRef.state) {
-            this.urlInvestmentId = pageRef.state.c__recordId || pageRef.state.recordId || null;
+        if (pageRef) {
+            const state = pageRef.state || {};
+            const attrs = pageRef.attributes || {};
+            console.log('[Logframe] pageRef.state', JSON.stringify(state));
+            console.log('[Logframe] pageRef.attributes', JSON.stringify(attrs));
+            this.urlInvestmentId =
+                state.c__recordId ||
+                state.recordId ||
+                attrs.recordId ||
+                null;
+            if (!this.recordId && this.urlInvestmentId) {
+                // In Experience Cloud, recordId may not be provided; require c__recordId in the URL.
+                this.recordId = this.urlInvestmentId;
+                console.log('[Logframe] recordId set from c__recordId', this.recordId);
+            }
 
-            const urlVersion = pageRef.state.version || pageRef.state.c__version || null;
+            const urlVersion = state.version || state.c__version || null;
             if (urlVersion && urlVersion !== this.selectedVersion) {
                 this.selectedVersion = String(urlVersion);
                 this.explicitVersionProvided = true;
@@ -152,24 +162,33 @@ export default class LogframeManagement extends LightningElement {
         }
     }
 
-    @wire(resolveInvestmentId, { contextId: '$recordId' })
-    wiredResolved({ data, error }) {
-        if (data !== undefined) {
-            this._resolvedFromContext = data;
-            this._recomputeEffectiveId();
-        }
-        if (error) console.error('resolveInvestmentId error', error);
-    }
-
     _recomputeEffectiveId() {
+        const contextInvestmentId =
+            (this.contextObjectApiName === 'IndividualApplication')
+                ? this.recordId
+                : (this.contextObjectApiName === 'uNI_ReprogrammingRequest__c'
+                    ? this.rrInvestmentId
+                    : null);
+
         const candidate =
             this.investmentId ||
             this.urlInvestmentId ||
-            this._resolvedFromContext ||
-            this.recordId;
+            contextInvestmentId;
 
         if (this.effectiveInvestmentId !== candidate) {
             this.effectiveInvestmentId = candidate;
+            console.log(
+                '[Logframe] effectiveInvestmentId set to',
+                this.effectiveInvestmentId,
+                'contextObjectApiName=',
+                this.contextObjectApiName,
+                'recordId=',
+                this.recordId,
+                'urlInvestmentId=',
+                this.urlInvestmentId,
+                'rrInvestmentId=',
+                this.rrInvestmentId
+            );
         }
 
         if (!this.selectedVersion && this.version) {
@@ -179,24 +198,12 @@ export default class LogframeManagement extends LightningElement {
     }
 
     // === Wire IA to read live version ===
-    @wire(getRecord, { recordId: '$effectiveInvestmentId', fields: [LIVE_LOGFRAME_VERSION] })
-    wiredIa({ data, error }) {
-        if (data) {
-            this.liveVersion = getFieldValue(data, LIVE_LOGFRAME_VERSION);
-            this.iaDefaultLoaded = true;
-            this._attemptSetDefaultVersion();
-        }
-        else if (error) {
-            console.error('getRecord (IA live version) error', error);
-            this.liveVersion = undefined;
-        }
-    }
-
     // ---- Determine context object type ----
     @wire(getObjectApiName, { recordId: '$recordId' })
     wiredObjectType({ data, error }) {
         if (data) {
             this.contextObjectApiName = data;
+            console.log('[Logframe] contextObjectApiName', this.contextObjectApiName, 'recordId', this.recordId);
             this._attemptSetDefaultVersion();
         } else if (error) {
             console.error('Error resolving context object type', error);
@@ -215,9 +222,22 @@ export default class LogframeManagement extends LightningElement {
         if (data) {
             this.rrDefaultVersion = getFieldValue(data, RR_LOGFRAME_VERSION);
             this.rrDefaultLoaded = true;
+            console.log('[Logframe] rrDefaultVersion', this.rrDefaultVersion, 'rrRecordId', this.rrRecordId);
             this._attemptSetDefaultVersion();
         } else if (error) {
             console.error('getRecord (RR version) error', error);
+        }
+    }
+
+    // ---- Resolve IA (Investment) from Reprogramming Request ----
+    @wire(getRecord, { recordId: '$rrRecordId', fields: [RR_INVESTMENT_FIELD] })
+    wiredRRInvestment({ data, error }) {
+        if (data) {
+            this.rrInvestmentId = getFieldValue(data, RR_INVESTMENT_FIELD);
+            console.log('[Logframe] rrInvestmentId', this.rrInvestmentId, 'rrRecordId', this.rrRecordId);
+            this._recomputeEffectiveId();
+        } else if (error) {
+            console.error('getRecord (RR investment) error', error);
         }
     }
 
@@ -270,6 +290,9 @@ export default class LogframeManagement extends LightningElement {
             this.indicators = data.indicators;
             this.fieldsMap = data.fieldsMap;
             this.isEditableLogframe = data.isEditableLogframe;
+            this.liveVersion = data.liveVersion;
+            this.iaDefaultLoaded = true;
+            this._attemptSetDefaultVersion();
 
             const lfYears = data.projectyears || 0;
             const ctxYears = this.contextYears || 0; // we set this in the IA/reprogramming wire

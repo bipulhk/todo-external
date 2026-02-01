@@ -84,7 +84,7 @@ public static Map<String, Object> getRelatedRecordsByVersion(Id applicationId, S
     List<IndividualApplication> iaRows = [
         SELECT Id, uNI_ProjectName__c, uNI_ImplementationStartDate__c, uNI_InvestmentEndDate__c,
                uNI_Consortium_Partners__c, uNI_Project_Countries__c, uNI_GranteeContact__r.Name,
-               uNI_GAM__c, uNI_ProgramManagerUser__c, uNI_ProgramOfficerUser__c
+               uNI_GAM__c, uNI_ProgramManagerUser__c, uNI_ProgramOfficerUser__c, uNI_LogframeVersion__c
         FROM IndividualApplication
         WHERE Id = :iaId
         LIMIT 1
@@ -110,6 +110,7 @@ public static Map<String, Object> getRelatedRecordsByVersion(Id applicationId, S
     resultFieldsApplication.put('LeadGrantee', grantApplication.uNI_GranteeContact__r != null ? grantApplication.uNI_GranteeContact__r.Name : null);
     resultFieldsApplication.put('ProjectCountries', grantApplication.uNI_Project_Countries__c);
     dto.put('fieldsMap', resultFieldsApplication);
+    dto.put('liveVersion', grantApplication.uNI_LogframeVersion__c);
 
     // ---- Load the specific logframe for the chosen version (safe)
     List<uNI_Logframe__c> logframes = [
@@ -323,6 +324,7 @@ private static Map<String, Object> assembleDtoForIaAndLogframe(IndividualApplica
     resultFieldsApplication.put('LeadGrantee', ia.uNI_GranteeContact__r != null ? ia.uNI_GranteeContact__r.Name : null);
     resultFieldsApplication.put('ProjectCountries', ia.uNI_Project_Countries__c);
     result.put('fieldsMap', resultFieldsApplication);
+    result.put('liveVersion', ia.uNI_LogframeVersion__c);
 
     if (lf == null) {
         // No logframe for that IA/version

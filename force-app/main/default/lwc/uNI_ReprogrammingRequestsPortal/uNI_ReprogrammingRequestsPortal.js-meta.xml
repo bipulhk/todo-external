@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+	<apiVersion>63.0</apiVersion>
+	<isExposed>true</isExposed>
+	<targets>
+		<target>lightning__AppPage</target>
+		<target>lightning__HomePage</target>
+		<target>lightning__RecordPage</target>
+		<target>lightning__FlowScreen</target>
+		<target>lightning__RecordAction</target>
+		<target>lightning__GlobalAction</target>
+		<target>lightning__UrlAddressable</target>
+		<target>lightningCommunity__Page</target>
+		<target>lightningCommunity__Page_Layout</target>
+		<target>lightningCommunity__Theme_Layout</target>
+	</targets>
+	<targetConfigs>
+		<targetConfig targets="lightning__RecordPage">
+			<property name="recordId" type="String" label="Record ID" description="The ID of the uNI_Investment__c record to filter by" />
+			<property name="flowApiName" type="String" label="Flow API Name" description="API name of the flow to launch when New is clicked" />
+		</targetConfig>
+	</targetConfigs>
+</LightningComponentBundle>

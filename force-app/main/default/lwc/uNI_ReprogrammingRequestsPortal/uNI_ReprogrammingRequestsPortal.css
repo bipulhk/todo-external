@@ -1,0 +1,24 @@
+/* Makes the modal container larger */
+.custom-modal {
+    max-width: 80rem; /* default is ~52rem */
+    width: 90%;       /* adjust width percentage as needed */
+}
+
+/* Keeps modal centered on the screen */
+.slds-modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ensures scroll if content is long */
+.slds-modal__content {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.table-wrapper {
+    width: 100%;
+    /* Prevent accidental horizontal scrollbars while resizing */
+    overflow: hidden;
+}
