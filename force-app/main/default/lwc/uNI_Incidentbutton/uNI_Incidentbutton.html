@@ -1,0 +1,180 @@
+<template>
+    <!-- Modal with Flow -->
+    <template if:true={showFlowModal}>
+        <section class="slds-modal slds-fade-in-open" aria-labelledby="incident-flow-modal" role="dialog" tabindex="-1">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header slds-grid slds-grid_align-spread slds-p-around_small">
+                    <!-- Title -->
+                    <h2 id="incident-flow-modal" class="slds-text-heading_medium">
+                        Report Incident
+                    </h2>
+
+                    <!-- Close (X) button -->
+                    <button
+                        class="slds-button slds-button_icon slds-modal__close"
+                        title="Close"
+                        onclick={closeModal}
+                    >
+                        <lightning-icon
+                            icon-name="utility:close"
+                            alternative-text="Close"
+                            size="small"
+                        ></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                </header>
+
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-flow flow-api-name={flowApiName} flow-input-variables={flowInputVariables}
+                        onstatuschange={handleStatusChange}></lightning-flow>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+
+
+    <template if:true={showFlowModal3}>
+        <section class="slds-modal slds-fade-in-open" aria-labelledby="contributor-flow-modal" role="dialog"
+            tabindex="-1">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header slds-grid slds-grid_align-spread slds-p-around_small">
+                    <h2 id="contributor-flow-modal" class="slds-text-heading_medium">
+                        Add New Contributor
+                    </h2>
+                    <button
+                    class="slds-button slds-button_icon slds-modal__close"
+                    title="Close"
+                    onclick={closeModal}
+                >
+                    <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-flow flow-api-name={flowApiName3} flow-input-variables={flowInputVariables}
+                        onstatuschange={handleStatusChange}></lightning-flow>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+    <template if:true={showGenericModal}>
+        <section class="slds-modal slds-fade-in-open"  role="dialog"
+            tabindex="-1">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header slds-grid slds-grid_align-spread slds-p-around_small">
+                    <h2  class="slds-text-heading_medium">
+                        {genericModalHeading}
+                    </h2>
+                    <button
+                    class="slds-button slds-button_icon slds-modal__close"
+                    title="Close"
+                    onclick={closeGenericModal}
+                >
+                    <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+                    <span class="slds-assistive-text">Close</span>
+                </button>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-flow flow-api-name={flowApiName3} flow-input-variables={flowInputVariables}
+                        onstatuschange={handleGenericModalStatusChange}></lightning-flow>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+<template if:true={isGAD}>
+        <template if:true={gad_showFlowModal}>
+            <section class="slds-modal slds-fade-in-open" tabindex="-1">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <div class="slds-p-around_medium slds-text-align_right">
+                            <lightning-button label="Cancel" variant="neutral" onclick={cancelFlowSubmit_GAD}>
+                            </lightning-button>
+                        </div>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <lightning-flow flow-api-name={currentFlowToBeRun} flow-input-variables={flowInputVariables}
+                            onstatuschange={handleGadStatusChange}>
+                        </lightning-flow>
+                    </div>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </template>
+    <!-- The Button -->
+   <div class="slds-p-around_medium slds-text-align_right">
+   
+
+    
+<template if:true={isGranteeOrContributor}>
+    <lightning-button label={buttonLabel3} variant="brand" onclick={handleLaunch3}
+        disabled={isAddContributorDisabled} class="slds-m-left_x-small">
+    </lightning-button>
+<template if:true={isInvestment}>
+     <lightning-button label={buttonLabel} variant={buttonVariant} onclick={handleLaunch}
+        class="slds-m-left_x-small">
+    </lightning-button>
+    <lightning-button label="Risk Register" variant="brand" onclick={handleOpenRiskRegister}
+        class="slds-m-left_x-small">
+    </lightning-button>
+
+    <lightning-button label="Management Actions" variant="brand" onclick={handleOpenManagementActions}
+        class="slds-m-left_x-small">
+    </lightning-button>
+
+    <lightning-button label="Reprogramming" variant="brand" onclick={handleOpenReprogrammingRequests}
+        class="slds-m-left_x-small">
+    </lightning-button>
+
+    <lightning-button label="Open Annual Report" variant="brand" onclick={handleOpenAnnualReport}
+        class="slds-m-left_x-small" disabled={isAnnualReportButtonDisabled}>
+    </lightning-button>
+<template if:true={isGrantee}>
+    <lightning-button label="Raise Disbursement Request" variant="brand" onclick={handleCreateDisbursementRequest}
+        class="slds-m-left_x-small">
+    </lightning-button>
+</template>
+   </template>
+
+    
+
+    <template if:true={isGAD}>
+            <template if:true={showStage2Button}>
+                <lightning-button label="Upload Stage 2 Package" variant="brand" onclick={handleFlowLaunch_GAD} class="slds-m-left_x-small">
+                </lightning-button>
+            </template>
+
+            <template if:true={showStage3Button}>
+                <lightning-button label="Upload Stage 3 Package" variant="brand" onclick={handleFlowLaunch_GAD} class="slds-m-left_x-small">
+                </lightning-button>
+            </template>
+
+            <template if:true={showStage4Button}>
+                <lightning-button label="Upload Stage 4 Package" variant="brand" onclick={handleFlowLaunch_GAD} class="slds-m-left_x-small">
+                </lightning-button>
+            </template>
+
+            <template if:true={showEbVoteButton}>
+                <lightning-button label="Submit vote" variant="brand" onclick={handleEBVoteFlowLaunch_GAD} class="slds-m-left_x-small">
+                </lightning-button>
+            </template>
+
+          
+
+           
+        </template>
+</template>
+  <template if:true={isGAD}>
+      <template if:true={showPRCReviewButton}>
+                <lightning-button label="Submit PRC Feedback" variant="brand" onclick={handlePRCFeedbackLaunch_GAD} class="slds-m-left_x-small">
+                </lightning-button>
+            </template>
+  </template>
+</div>
+
+</template>

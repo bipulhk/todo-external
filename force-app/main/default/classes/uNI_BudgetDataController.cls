@@ -251,24 +251,31 @@ public without sharing class uNI_BudgetDataController {
         // ---------------------------------------------------------------------
 
         // Organization names (version-aware)
+        System.debug('BudgetDataController: orgNames query -> parentId=' + parentId + ', version=' + version);
         List<uNI_SummaryBudget__c> summaryBudgets;
         if (String.isBlank(version)) {
             summaryBudgets = [
-                SELECT Id, Name
+                SELECT Id, Name, uNI_Investment_record_type__c
                 FROM uNI_SummaryBudget__c
                 WHERE uNI_IndividualApplication__c = :parentId
-                    AND is_Full_Row_Span__c = false AND uNI_Investment_record_type__c='GAD'
+                    AND is_Full_Row_Span__c = false AND uNI_Investment_record_type__c='Investment'
                 ORDER BY is_Lead_Organization_1__c DESC
             ];
         } else {
             summaryBudgets = [
-                SELECT Id, Name, uNI_Version__c
+                SELECT Id, Name, uNI_Version__c, uNI_Investment_record_type__c
                 FROM uNI_SummaryBudget__c
                 WHERE uNI_IndividualApplication__c = :parentId
-                  AND is_Full_Row_Span__c = false AND uNI_Investment_record_type__c='GAD'
+                  AND is_Full_Row_Span__c = false AND uNI_Investment_record_type__c='Investment'
                   AND (uNI_Version__c = :version OR uNI_Version__c = null)
                 ORDER BY is_Lead_Organization_1__c DESC
             ];
+        }
+        System.debug('BudgetDataController: orgNames result size=' + (summaryBudgets == null ? 0 : summaryBudgets.size()));
+        if (summaryBudgets != null) {
+            for (uNI_SummaryBudget__c sb : summaryBudgets) {
+                System.debug('BudgetDataController: orgName => Id=' + sb.Id + ', Name=' + sb.Name + ', version=' + sb.uNI_Version__c + ', type=' + sb.uNI_Investment_record_type__c);
+            }
         }
 
         List<Map<String, String>> orgNames = new List<Map<String, String>>();

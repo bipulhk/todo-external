@@ -91,3 +91,53 @@ Updated the `uNI_ReprogrammingRequest__c` rules in `force-app/main/default/lwc/u
 If you want, I can also remove the unused visibility branch for “Submit to PRC for review” in the RR filter to keep it tidy.
 
 ---
+
+
+**User**
+
+for the uNI_ButtonListClone, what is the the visibility condition if the objec is uNI_ReprogrammingRequest__c for the button 'Review Reprogramming Request'
+
+i have recently updated the buttonlistclone lwc so please check again
+
+---
+
+
+**OpenAI Codex**
+
+For `uNI_ReprogrammingRequest__c`, the current visibility condition for **“Review Reprogramming Request”** is:
+
+- `rrIsPMPO && rrStatus === 'Requested'`
+
+This is in `force-app/main/default/lwc/uNI_ButtonListClone/uNI_ButtonListClone.js:2161`.
+
+---
+
+
+**User**
+
+i have created the  uNI_IsUserPMOrPO__c for the reprogramming request please use that field to check that
+
+---
+
+
+**OpenAI Codex**
+
+Updated `uNI_ButtonListClone` to use the new `uNI_IsUserPMOrPO__c` field on `uNI_ReprogrammingRequest__c` for PM/PO checks.
+
+Changes:
+- Added RR field import and included it in `RR_RECORD_FIELDS`.
+- Set `rrIsPMPO` from `RR_uNI_IsUserPMOrPO__c` instead of `rrIsActionOwner`.
+
+File touched:
+- `force-app/main/default/lwc/uNI_ButtonListClone/uNI_ButtonListClone.js`
+
+If you want this field used anywhere else (other components or Apex), point me to them.
+
+---
+
+
+**User**
+
+i have recently refreshed the uNI_ButtonListClone LWC, can you please check again and do it in that pls
+
+---

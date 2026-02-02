@@ -16,7 +16,7 @@
  * Clones Summary Budgets, Expense Types, and Budget Data rows from source → target version,
  * and remaps Budget Data to the new versioned Outputs.
  */
-public with sharing class uNI_CloneBudgetData {
+public without sharing class uNI_CloneBudgetData {
 
     // ===== Request / Response DTOs =====
     public class Request {

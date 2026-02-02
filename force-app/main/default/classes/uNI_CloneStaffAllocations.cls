@@ -11,7 +11,7 @@
  * 1.0 | Nov xx, 2025 |        | Initial Version
  **/
 // Invocable clone helper used by Create/Return Reprogramming flows.
-public with sharing class uNI_CloneStaffAllocations {
+public without sharing class uNI_CloneStaffAllocations {
 
     // ===== Request / Response DTOs =====
     public class Request {

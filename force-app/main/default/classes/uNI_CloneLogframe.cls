@@ -2,7 +2,7 @@
  * Invocable clone helper used by Create/Return Reprogramming flows.
  * Clones Logframe structure (Outcomes, Outputs, Indicators) and bumps version by +1.
  */
-public with sharing class uNI_CloneLogframe {
+public without sharing class uNI_CloneLogframe {
 
     public class Request {
         @InvocableVariable(required=true) 

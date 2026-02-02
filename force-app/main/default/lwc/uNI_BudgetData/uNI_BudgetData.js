@@ -678,6 +678,18 @@ export default class BudgetTable extends LightningElement {
                 parentId: this.recordId,
                 version: this.version
             });
+            console.log(
+                'BudgetTable: loadData result -> recordId',
+                this.recordId,
+                'version',
+                this.version,
+                'orgNames',
+                result?.orgNames ? result.orgNames.length : 0,
+                'selectedColumns',
+                result?.selectedColumns ? result.selectedColumns.length : 0,
+                'status',
+                result?.status
+            );
             this.fundingSources = result.fundingSources || [];
             this.expenseGroupOptions = result.expenseGroupOptions || [];
             this.expenseTypeOptions = result.expenseTypeOptions || [];
@@ -1077,6 +1089,7 @@ export default class BudgetTable extends LightningElement {
             this.submitPop=true;
         }
     handleSubmit(){
+        this.submitPop=false;
         this.validateData('Submitted');
     }
     closeModal() {
@@ -1165,11 +1178,12 @@ export default class BudgetTable extends LightningElement {
                             this.showToast('Validation Error', `Row ${rowNumber}: Invalid value for ${labelVal}`, 'error');
                         }  
                         if(status=='Submitted'){
+                            if(!field.startsWith('custom')){
                             if (isVisible && (row[field] === null || row[field] === undefined || row[field] === '')) {
                                 //errors.push(`Row ${rowNumber}: Missing value for ${field}`);
                                 this.isError=true;
                                 this.showToast('Validation Error', `Row ${rowNumber}: Missing value for ${labelVal}`, 'error');
-                            }
+                            }}
                         }
                     }
                     else

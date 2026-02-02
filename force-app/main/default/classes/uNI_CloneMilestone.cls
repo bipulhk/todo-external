@@ -12,7 +12,7 @@
 **/
 
 // Invocable clone helper used by Create/Return Reprogramming flows.
-public with sharing class uNI_CloneMilestone {
+public without sharing class uNI_CloneMilestone {
 
     public class Request {
         @InvocableVariable(required=true)

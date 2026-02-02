@@ -12,7 +12,7 @@
 **/
 
 // Invocable clone helper used by Create/Return Reprogramming flows.
-public with sharing class uNI_CloneCoFunding {
+public without sharing class uNI_CloneCoFunding {
 
     // ===== Request / Response DTOs =====
     public class Request {
@@ -123,6 +123,7 @@ public with sharing class uNI_CloneCoFunding {
                    uNI_ReprogrammingRequest__c
             FROM uNI_Budget_Summary_Source_of_Funding__c
             WHERE uNI_IndividualApplication__c = :req.individualApplicationId
+            AND uNI_Investment_record_type__c = 'Investment'
               AND uNI_version__c = :req.sourceVersion
         ];
 

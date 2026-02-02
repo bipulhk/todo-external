@@ -127,6 +127,7 @@ import RR_uNI_isStage1Defined__c from '@salesforce/schema/uNI_ReprogrammingReque
 import RR_uNI_IsSubmittedbyDirectorAndLegal__c from '@salesforce/schema/uNI_ReprogrammingRequest__c.uNI_IsSubmittedbyDirectorAndLegal__c';
 import RR_uNI_IsProjectParameterCreatedForRep__c from '@salesforce/schema/uNI_ReprogrammingRequest__c.uNI_IsProjectParameterCreatedForRep__c';
 import RR_uNI_IsUserActionOwner__c from '@salesforce/schema/uNI_ReprogrammingRequest__c.uNI_IsUserActionOwner__c';
+import RR_uNI_IsUserPMOrPO__c from '@salesforce/schema/uNI_ReprogrammingRequest__c.uNI_IsUserPMOrPO__c';
 import RR_uNI_IsUserSecondaryOwner__c from '@salesforce/schema/uNI_ReprogrammingRequest__c.uNI_IsUserSecondaryOwner__c';
 import RR_RT_DevName from '@salesforce/schema/uNI_ReprogrammingRequest__c.RecordType.DeveloperName';
 import RR_RecordTypeId from '@salesforce/schema/uNI_ReprogrammingRequest__c.RecordTypeId';
@@ -269,6 +270,7 @@ const RR_RECORD_FIELDS = [
     RR_uNI_isStage1Defined__c,
     RR_uNI_IsProjectParameterCreatedForRep__c,
     RR_uNI_IsUserActionOwner__c,
+    RR_uNI_IsUserPMOrPO__c,
     RR_uNI_IsUserSecondaryOwner__c
 ];
 
@@ -641,12 +643,12 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                         { label: 'Create Logframe', value: 'createLogframe', type: 'flow', flowApi: 'uNI_CreateLogframeRecordFlow' },
                         { label: 'Notify Proponent', value: 'notifyProponent', type: 'url', url: '/lightning/cmp/c__YourOmniScriptComponent' },
                         { label: 'Score Proposal Assessment', value: 'uNI_ScoreAssessmentNewTab', type: 'LWC' },
-                        { label: 'Score Assessment', value: 'uNI_ScoreAssessmentNewTab', type: 'LWC' },
-                        { label: 'Complete Assessment', value: 'completeAssessment', type: 'flow', flowApi: 'uNI_Change_Individual_Application_Review_Level' },
+                      
+                        { label: 'Complete Assessment', value: 'completeAssessment', type: 'flow', flowApi: 'uNI_ChangeIndividualApplicationReviewLevel' },
                                                 { label: 'New Risk Register', value: 'uNI_RiskRegisterNewTab', type: 'LWC' },
                         { label: 'View L3 Scores', value: 'uNI_ViewL3Scores', type: 'LWC' },
                         { label: 'Log Annual Report', value: 'uNI_Log_Annual_Report', type: 'placeholder' },
-                        { label: 'Person(s) reviewing', value: 'uNI_AddMember', type: 'placeholder' },
+                        { label: 'Person(s) reviewing',value: 'uNI_AddmembertoIA', type: 'flow', flowApi: 'uNI_AddmembertoIA' },
                         { label: 'Create Contributor User', value: 'uNI_Create_Contributor_User', type: 'placeholder' },
                         { label: 'Provide Proposal Feedback', value: 'uNI_ProvideProposalFeedback', type: 'placeholder' },
                         { label: 'Report Incident', value: 'Report_Incident', type: 'placeholder' },
@@ -871,7 +873,7 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                        
                         { label: 'Notify Proponent', value: 'notifyProponent', type: 'url', url: '/lightning/cmp/c__YourOmniScriptComponent' },
                         { label: 'Score Proposal Assessment', value: 'uNI_ScoreAssessmentNewTab', type: 'LWC' },
-                        { label: 'Complete Assessment', value: 'completeAssessment', type: 'flow', flowApi: 'uNI_Change_Individual_Application_Review_Level' },
+                        { label: 'Complete Assessment', value: 'completeAssessment', type: 'flow', flowApi: 'uNI_ChangeIndividualApplicationReviewLevel' },
                                                 { label: 'New Risk Register', value: 'uNI_RiskRegisterNewTab', type: 'LWC' }
 
 
@@ -1278,6 +1280,12 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
         else if (selected.type === 'LWC') {
             if (selected.value === 'uNI_FeedbackForm') {
                 this.showFeedbackForm = true;
+                return;
+            }
+
+            if (selected.value === 'uNI_ScoreAssessmentNewTab') {
+                const targetUrl = `/lightning/cmp/c__uNI_IndividualAssessmentSubmission?c__recordId=${encodeURIComponent(this.recordId)}`;
+                window.open(targetUrl, '_blank');
                 return;
             }
 
@@ -2108,6 +2116,7 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
         const rrSecondaryOwner = getFieldValue(data, RR_uNI_SecondaryActionOwner__c);
         const rrIsActionOwner = getFieldValue(data, RR_uNI_IsUserActionOwner__c);
         const rrIsSecondaryOwner = getFieldValue(data, RR_uNI_IsUserSecondaryOwner__c);
+        const rrIsPMPO = getFieldValue(data, RR_uNI_IsUserPMOrPO__c);
         const rrStage3Submitted = getFieldValue(data, RR_uNI_IsStage3PackageSubmitted__c);
         const rrStage3PTSubmitted = getFieldValue(data, RR_uNI_IsStage3PTPackageSubmitted__c);
         const rrOmtReviewerIds = getFieldValue(data, RR_uNI_OMTReviewerIds__c);
@@ -2133,7 +2142,6 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
         const rrProjParams = getFieldValue(data, RR_uNI_IsProjectParameterCreatedForRep__c);
         const rrIsStage1Defined = getFieldValue(data, RR_uNI_isStage1Defined__c);
 
-        const rrIsPMPO = rrIsActionOwner;
         const rrIsPT = rrIsSecondaryOwner;
 
         this.ACTION_CONFIG.uNI_ReprogrammingRequest__c.menus.forEach(menu => {

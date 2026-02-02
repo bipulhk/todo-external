@@ -297,7 +297,7 @@
             <label>Material EB</label>
         </rules>
     </decisions>
-    <description>UAT</description>
+    <description>UAT removed uni headers.</description>
     <environments>Default</environments>
     <formulas>
         <name>newLogframeVersion</name>
@@ -420,6 +420,12 @@
             <field>uNI_CurrentActionOwner__c</field>
             <value>
                 <stringValue>PM/PO</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>uNI_CurrentPendingTask__c</field>
+            <value>
+                <stringValue>Complete Project Paramters</stringValue>
             </value>
         </inputAssignments>
         <inputAssignments>
@@ -561,6 +567,12 @@
             </value>
         </inputAssignments>
         <inputAssignments>
+            <field>uNI_CurrentPendingTask__c</field>
+            <value>
+                <stringValue>Draft Reprogramming Request</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
             <field>uNI_Stage__c</field>
         </inputAssignments>
         <inputAssignments>
@@ -586,6 +598,9 @@
         <allowBack>false</allowBack>
         <allowFinish>true</allowFinish>
         <allowPause>false</allowPause>
+        <connector>
+            <targetReference>refresh</targetReference>
+        </connector>
         <fields>
             <name>Copy_1_of_Copy_1_of_d1</name>
             <fieldText>&lt;p&gt;Reprogramming Request &lt;strong&gt;{!Get_Reprogramming.Name}&lt;/strong&gt; Accepted proceed for Stage 1.&lt;/p&gt;</fieldText>
@@ -601,7 +616,7 @@
         </fields>
         <nextOrFinishButtonLabel>Finish</nextOrFinishButtonLabel>
         <showFooter>true</showFooter>
-        <showHeader>true</showHeader>
+        <showHeader>false</showHeader>
     </screens>
     <screens>
         <name>Copy_2_of_Copy_1_of_Success</name>
@@ -626,7 +641,7 @@
         </fields>
         <nextOrFinishButtonLabel>Finish</nextOrFinishButtonLabel>
         <showFooter>true</showFooter>
-        <showHeader>true</showHeader>
+        <showHeader>false</showHeader>
     </screens>
     <screens>
         <name>Proceed_With_Reprogramming1</name>
@@ -683,7 +698,47 @@
             </visibilityRule>
         </fields>
         <showFooter>true</showFooter>
-        <showHeader>true</showHeader>
+        <showHeader>false</showHeader>
+    </screens>
+    <screens>
+        <name>refresh</name>
+        <label>refrsh</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>refreshc</name>
+            <extensionName>c:uNI_NavigateRec</extensionName>
+            <fieldType>ComponentInstance</fieldType>
+            <inputParameters>
+                <name>isHomePageRefresh</name>
+                <value>
+                    <booleanValue>false</booleanValue>
+                </value>
+            </inputParameters>
+            <inputParameters>
+                <name>recordId</name>
+                <value>
+                    <elementReference>recordId</elementReference>
+                </value>
+            </inputParameters>
+            <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+            <isRequired>true</isRequired>
+            <storeOutputAutomatically>true</storeOutputAutomatically>
+            <styleProperties>
+                <verticalAlignment>
+                    <stringValue>top</stringValue>
+                </verticalAlignment>
+                <width>
+                    <stringValue>12</stringValue>
+                </width>
+            </styleProperties>
+        </fields>
+        <nextOrFinishButtonLabel>Finish</nextOrFinishButtonLabel>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
     </screens>
     <screens>
         <name>s</name>
@@ -726,7 +781,7 @@
         </fields>
         <nextOrFinishButtonLabel>Return</nextOrFinishButtonLabel>
         <showFooter>true</showFooter>
-        <showHeader>true</showHeader>
+        <showHeader>false</showHeader>
     </screens>
     <screens>
         <name>Success</name>
@@ -751,7 +806,7 @@
         </fields>
         <nextOrFinishButtonLabel>Finish</nextOrFinishButtonLabel>
         <showFooter>true</showFooter>
-        <showHeader>true</showHeader>
+        <showHeader>false</showHeader>
     </screens>
     <start>
         <locationX>0</locationX>
@@ -760,7 +815,7 @@
             <targetReference>Get_Reprogramming</targetReference>
         </connector>
     </start>
-    <status>Active</status>
+    <status>Draft</status>
     <variables>
         <name>newreprogrammingID</name>
         <dataType>String</dataType>
