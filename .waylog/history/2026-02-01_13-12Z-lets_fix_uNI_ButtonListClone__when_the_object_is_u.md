@@ -141,3 +141,19 @@ If you want this field used anywhere else (other components or Apex), point me t
 i have recently refreshed the uNI_ButtonListClone LWC, can you please check again and do it in that pls
 
 ---
+
+
+**OpenAI Codex**
+
+Re-applied the PM/PO change in your refreshed `uNI_ButtonListClone`:
+
+- Added RR field import `uNI_IsUserPMOrPO__c`
+- Included it in `RR_RECORD_FIELDS`
+- Set `rrIsPMPO` from that field instead of `rrIsActionOwner`
+
+File updated:
+- `force-app/main/default/lwc/uNI_ButtonListClone/uNI_ButtonListClone.js`
+
+If you want me to re-check any other recent edits (e.g., “Review Reprogramming Request”, “Submit PRC Feedback”, or the commented PRC review button), tell me and I’ll verify those too.
+
+---
