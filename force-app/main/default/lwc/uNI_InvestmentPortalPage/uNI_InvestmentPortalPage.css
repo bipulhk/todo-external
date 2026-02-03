@@ -8,9 +8,52 @@
 }
 
 .portal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
   padding: 1rem 1.25rem 0.75rem;
   border-bottom: 1px solid #d8dde6;
   background: #f9fafb;
+  flex-wrap: wrap;
+}
+
+.portal-header-main {
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.portal-header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.portal-header-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 0.5rem;
+  background: #5a6bff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.portal-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.portal-eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #5c6b7a;
+  text-transform: none;
+  letter-spacing: 0.02em;
 }
 
 .portal-title {

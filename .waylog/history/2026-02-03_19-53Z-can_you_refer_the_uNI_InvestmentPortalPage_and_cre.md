@@ -345,3 +345,128 @@ Done. I added the **Closure** and **Audit** tabs right after **Risk Register** a
 If you want those tabs to load specific LWCs/flows, tell me the component/flow names and I’ll wire them in.
 
 ---
+
+
+**User**
+
+in the uNI_InvestmentPortalPage LWC can you add all the buttons that are present in the uNI_Incidentbutton LWC like a dropdown list of buttons at the right side , before making any changes to the  uNI_InvestmentPortalPage can you please confirm with me what will you be doing?
+
+---
+
+
+**OpenAI Codex**
+
+Got it. Here’s exactly what I propose **before I change `uNI_InvestmentPortalPage`**:
+
+**Plan**
+1. **Add a right‑aligned dropdown** (`lightning-button-menu`) in `uNI_InvestmentPortalPage.html` header.
+2. **Populate the dropdown with the same actions** as `uNI_Incidentbutton` (same labels and order), and **apply the same visibility logic**:
+   - Report Incident / Continue Reporting Incident  
+   - Add Contributor  
+   - Risk Register  
+   - Management Actions  
+   - Reprogramming  
+   - Open Annual Report  
+   - Raise Disbursement Request  
+   - Upload Stage 2/3/4 Package  
+   - Submit vote  
+   - Submit PRC Feedback
+3. **Port the supporting logic** from `uNI_Incidentbutton.js` into `uNI_InvestmentPortalPage.js`:
+   - `getGranteeStageInfo`, `hasDraftIncident`, `getCurrentUserTitle`, `findAnnualReportId`
+   - recordId resolution and all show/hide flags
+4. **Include the same modals/flows** in `uNI_InvestmentPortalPage.html` so the dropdown actions behave identically.
+
+I won’t touch `uNI_Incidentbutton`.
+
+Please confirm:
+1. Do you want **the exact same visibility rules** as `uNI_Incidentbutton`?
+2. Should the **label change** to “Continue Reporting Incident” when a draft exists (same behavior)?
+3. Any **change in order** of the dropdown items?
+
+Once you confirm, I’ll implement.
+
+---
+
+
+**User**
+
+you can skip the Upload Stage 2/3/4 Package
+Submit vote
+Submit PRC Feedback buttons , for the rest import along with the visibility conditions , also remember to add comments so that i can refer it later
+
+---
+
+
+**OpenAI Codex**
+
+Done. I added the **Actions** dropdown to `uNI_InvestmentPortalPage`, pulling the same visibility logic from `uNI_Incidentbutton` and skipping the GAD stage buttons you listed. I also added inline comments throughout so you can trace the behavior later.
+
+**What changed**
+- Added a right‑aligned `Actions` menu in the Investment Portal header.
+- Wired actions to the same flows/URLs as `uNI_Incidentbutton` (except the GAD stage actions you asked to skip).
+- Copied visibility rules:  
+  - `Add Contributor` for grantee/contributor  
+  - Incident + Risk/Management/Reprogramming/Annual Report for investment grantee/contributor  
+  - `Raise Disbursement Request` for grantee + investment  
+- Added the three modals (incident flow, add contributor flow, generic disbursement flow) with comments.
+
+**Files updated**
+- `force-app/main/default/lwc/uNI_InvestmentPortalPage/uNI_InvestmentPortalPage.html`
+- `force-app/main/default/lwc/uNI_InvestmentPortalPage/uNI_InvestmentPortalPage.js`
+- `force-app/main/default/lwc/uNI_InvestmentPortalPage/uNI_InvestmentPortalPage.css`
+
+If you want the dropdown order tweaked or any of these actions to open in‑page panels instead of flows/new tabs, tell me which ones.
+
+---
+
+
+**User**
+
+in the header display the Project name and pelaser remove the 'tabs load dynamic LWCs through the loader.'
+
+---
+
+
+**OpenAI Codex**
+
+Done. The header now shows the **Project Name** (from `IndividualApplication.uNI_ProjectName__c`) and the subtitle text is removed.
+
+**Updated files**
+- `force-app/main/default/lwc/uNI_InvestmentPortalPage/uNI_InvestmentPortalPage.html`
+- `force-app/main/default/lwc/uNI_InvestmentPortalPage/uNI_InvestmentPortalPage.js`
+
+If you want a different field (like `Name`) or want a fallback label, tell me and I’ll adjust.
+
+---
+
+
+**User**
+
+Header should look something like this 
+<image></image>
+
+---
+
+
+**User**
+
+Header should look something like this
+
+---
+
+
+**OpenAI Codex**
+
+Updated the header to match your screenshot:
+
+- Added a left icon tile
+- Added “Investments” eyebrow label
+- Project name shown below, bold
+
+**Files updated**
+- `force-app/main/default/lwc/uNI_InvestmentPortalPage/uNI_InvestmentPortalPage.html`
+- `force-app/main/default/lwc/uNI_InvestmentPortalPage/uNI_InvestmentPortalPage.css`
+
+If you want a different icon or color, tell me which.
+
+---
