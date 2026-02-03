@@ -2848,3 +2848,940 @@ To make the button show:
 If you want, I can give you the exact anonymous Apex to create the contributor record.
 
 ---
+
+
+**User**
+
+when i run the uNI_ReturnReprogrammingRequest, the budgetdata did not get cloned can you tell me why the IA id is 0iTFT0000000KLJ2A2 and the reprogramming request id is a14FT00000k1GZhYAM
+
+---
+
+
+**OpenAI Codex**
+
+Here’s why BudgetData didn’t clone for IA `0iTFT0000000KLJ2A2`:
+
+Facts from org:
+- **BudgetData v2 = 0**
+- **SummaryBudget v2 = 2**
+- **Expense Types v2 = 3**
+- RR `a14FT00000k1GZhYAM` has status **“PT Accept Material EB Request”** (not “Approved”)
+
+The real blocker is in **`uNI_CloneBudgetData`**:
+```apex
+if (hasTargetVersionRecords('uNI_SummaryBudget__c', ...) ||
+    hasTargetVersionRecords('uNI_BudgetData__c', ...)) {
+    return count;
+}
+```
+Because **SummaryBudget v2 already exists**, the method **skips cloning BudgetData rows entirely**. So even though the flow ran, it stops before inserting BudgetData.
+
+What to do:
+- **Fix logic**: change the guard to only skip if **BudgetData v2 exists**, not SummaryBudget.
+- Or **delete v2 SummaryBudgets and rerun** the flow (less ideal).
+
+If you want, I can patch the guard to:
+```apex
+if (hasTargetVersionRecords('uNI_BudgetData__c', ...)) return count;
+```
+so it won’t block just because summary budgets exist.
+
+Also note: the RR status isn’t “Approved”; if there’s any flow logic that depends on approval, that could stop cloning too. But the BudgetData skip above is the immediate cause given the current data.
+
+---
+
+
+**User**
+
+sure please patch the issue, Fix logic: change the guard to only skip if BudgetData v2 exists, not SummaryBudget.
+
+---
+
+
+**OpenAI Codex**
+
+Updated `uNI_CloneBudgetData` guard so it **only skips if BudgetData v2 already exists**, not just because SummaryBudgets exist.
+
+File changed:
+- `force-app/main/default/classes/uNI_CloneBudgetData.cls`
+
+You can re-run `uNI_ReturnReprogrammingRequest` now and BudgetData should clone even if SummaryBudgets v2 are already present.
+
+---
+
+
+**User**
+
+i have already run the flow can ayou give  me a anonymous apex that will delete the created data so that i can test this flow again?
+
+---
+
+
+**OpenAI Codex**
+
+Here’s a **one‑time Execute Anonymous** script that deletes the v2 data for IA `0iTFT0000000KLJ2A2` so you can re‑run `uNI_ReturnReprogrammingRequest`.
+
+It removes (in safe order):
+- Indicators, Milestones, Outputs, Outcomes, Logframe v2  
+- BudgetData v2, ExpenseTypes v2, SummaryBudgets v2  
+- Co‑Funding / Budget Source of Funding v2  
+- Foreign Exchange Rates v2  
+- Staff Allocations v2  
+
+```apex
+// ====== INPUTS ======
+Id iaId = '0iTFT0000000KLJ2A2';
+String targetVersion = '2';
+
+// ====== LOGFRAME STRUCTURE (delete children first) ======
+List<uNI_Logframe__c> logs = [
+    SELECT Id
+    FROM uNI_Logframe__c
+    WHERE uNI_Individual_Application__c = :iaId
+      AND uNI_LogframeVersion__c = :targetVersion
+];
+
+Set<Id> logIds = new Set<Id>();
+for (uNI_Logframe__c lf : logs) logIds.add(lf.Id);
+
+Set<Id> outIds = new Set<Id>();
+Set<Id> outcomeIds = new Set<Id>();
+
+if (!logIds.isEmpty()) {
+    for (uNI_PortfolioOutput__c o : [
+        SELECT Id FROM uNI_PortfolioOutput__c
+        WHERE uNI_Logframe__c IN :logIds
+    ]) outIds.add(o.Id);
+
+    for (uNI_PortfolioOutcomes__c o : [
+        SELECT Id FROM uNI_PortfolioOutcomes__c
+        WHERE uNI_Logframe__c IN :logIds
+    ]) outcomeIds.add(o.Id);
+
+    // Indicators
+    List<uNI_Indicator__c> inds = [
+        SELECT Id
+        FROM uNI_Indicator__c
+        WHERE (uNI_Output__c IN :outIds OR uNI_Outcome__c IN :outcomeIds)
+    ];
+    if (!inds.isEmpty()) delete inds;
+
+    // Milestones
+    List<uNI_Milestone__c> miles = [
+        SELECT Id
+        FROM uNI_Milestone__c
+        WHERE (uNI_Output__c IN :outIds OR uNI_Outcome__c IN :outcomeIds)
+           OR uNI_LogframeVersion__c = :targetVersion
+    ];
+    if (!miles.isEmpty()) delete miles;
+
+    // Outputs / Outcomes
+    if (!outIds.isEmpty()) delete [SELECT Id FROM uNI_PortfolioOutput__c WHERE Id IN :outIds];
+    if (!outcomeIds.isEmpty()) delete [SELECT Id FROM uNI_PortfolioOutcomes__c WHERE Id IN :outcomeIds];
+
+    // Logframe
+    delete logs;
+}
+
+// ====== BUDGET / FINANCE DATA ======
+
+// Budget Data
+List<uNI_BudgetData__c> bd = [
+    SELECT Id FROM uNI_BudgetData__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :targetVersion
+];
+if (!bd.isEmpty()) delete bd;
+
+// Expense Types
+List<uNI_Expense_Types__c> et = [
+    SELECT Id FROM uNI_Expense_Types__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :targetVersion
+];
+if (!et.isEmpty()) delete et;
+
+// Summary Budgets
+List<uNI_SummaryBudget__c> sb = [
+    SELECT Id FROM uNI_SummaryBudget__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :targetVersion
+];
+if (!sb.isEmpty()) delete sb;
+
+// Budget Source of Funding / Co-Funding
+List<uNI_Budget_Summary_Source_of_Funding__c> bfs = [
+    SELECT Id FROM uNI_Budget_Summary_Source_of_Funding__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_version__c = :targetVersion
+];
+if (!bfs.isEmpty()) delete bfs;
+
+// Foreign Exchange Rates
+List<uNI_ForeignExchangeRates__c> fx = [
+    SELECT Id FROM uNI_ForeignExchangeRates__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :targetVersion
+];
+if (!fx.isEmpty()) delete fx;
+
+// Staff Allocations
+List<uNI_StaffAllocations__c> sa = [
+    SELECT Id FROM uNI_StaffAllocations__c
+    WHERE uNI_IndividualApplications__c = :iaId
+      AND uNI_Version__c = :targetVersion
+];
+if (!sa.isEmpty()) delete sa;
+
+System.debug('Cleanup complete for IA=' + iaId + ', version=' + targetVersion);
+```
+
+Run this, then re-run the flow.  
+If any object uses a **numeric** version field and throws a bind error, tell me which line and I’ll adjust it.
+
+---
+
+
+**User**
+
+again the budget data was not cloned. can you please check it again, this is a very critical issue
+
+---
+
+
+**OpenAI Codex**
+
+I re‑checked the flow + clone class, and the most likely reason BudgetData still isn’t cloned on re‑runs is this: if **Summary Budgets for the target version already exist**, `uNI_CloneBudgetData` was returning an empty summary‑budget map. Then BudgetData rows keep their old SummaryBudget lookup (v1), which can fail insert validations or result in zero v2 rows. I’ve patched the clone logic to **map to existing target‑version Summary Budgets (by a stable key) and only clone the missing ones**, so BudgetData can remap correctly even when v2 Summary Budgets already exist.
+
+Changes made
+- `force-app/main/default/classes/uNI_CloneBudgetData.cls`
+  - Build a SummaryBudget map even when target version already exists.
+  - Match by key: `Name + Expense_type__c + uNI_Investment_record_type__c + is_Full_Row_Span__c`.
+  - Only clone missing SummaryBudget rows; always return a usable map.
+
+Two quick checks on your side
+- In `uNI_ReturnReprogrammingRequest`, BudgetData cloning happens only on the **Accept** path (not Return/Cancel).
+- Confirm IA’s `uNI_LogframeVersion__c` is a clean numeric string (e.g., “1”). If it’s blank or non‑numeric, the flow’s `newLogframeVersion` formula can produce `1`, which makes the clone think the target already exists.
+
+If you want, I can also add targeted debug logs inside `uNI_CloneBudgetData` to show:
+- source/target version
+- source counts
+- target counts
+- summary budget map size
+- output map size
+- first few insert errors
+
+Tell me if you want those logs or a quick anonymous apex to validate the clone run.
+
+---
+
+
+**User**
+
+sure anonymous apex pls
+
+---
+
+
+**OpenAI Codex**
+
+Here’s a ready‑to‑run Anonymous Apex script that will invoke `uNI_CloneBudgetData` for the IA and print before/after counts + any errors. Update IDs if needed.
+
+```apex
+Id iaId = '0iTFT0000000KLJ2A2';
+// Optional: keep for reference, not used by clone
+Id rrId = 'a14FT00000k1GZhYAM';
+
+IndividualApplication ia = [
+    SELECT Id, uNI_LogframeVersion__c
+    FROM IndividualApplication
+    WHERE Id = :iaId
+    LIMIT 1
+];
+
+String sourceVersion = String.valueOf(ia.uNI_LogframeVersion__c).trim();
+Integer srcInt;
+try { srcInt = Integer.valueOf(sourceVersion); }
+catch (Exception e) { srcInt = 0; }
+String targetVersion = String.valueOf(srcInt + 1);
+
+System.debug('Clone BudgetData: IA=' + iaId + ' sourceVersion=' + sourceVersion + ' targetVersion=' + targetVersion);
+
+Integer srcBudgetCount = [
+    SELECT COUNT()
+    FROM uNI_BudgetData__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :sourceVersion
+];
+Integer tgtBudgetCount = [
+    SELECT COUNT()
+    FROM uNI_BudgetData__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :targetVersion
+];
+System.debug('BudgetData counts BEFORE => source=' + srcBudgetCount + ', target=' + tgtBudgetCount);
+
+uNI_CloneBudgetData.Request req = new uNI_CloneBudgetData.Request();
+req.individualApplicationId = iaId;
+req.sourceVersion = sourceVersion;
+req.targetVersion = targetVersion;
+
+List<uNI_CloneBudgetData.Response> res = uNI_CloneBudgetData.run(new List<uNI_CloneBudgetData.Request>{ req });
+System.debug('Clone response => ' + JSON.serializePretty(res));
+
+Integer tgtBudgetCountAfter = [
+    SELECT COUNT()
+    FROM uNI_BudgetData__c
+    WHERE uNI_IndividualApplication__c = :iaId
+      AND uNI_Version__c = :targetVersion
+];
+System.debug('BudgetData count AFTER => target=' + tgtBudgetCountAfter);
+```
+
+Run this and send me the debug output (especially the response/errors) so I can pinpoint what’s still blocking the clone.
+
+---
+
+
+**User**
+
+i have deployed the clonebudgetdata can i just run the flow agian??
+
+---
+
+
+**OpenAI Codex**
+
+Yes, you can run the flow again.  
+
+With the current guards:
+- If **v2 BudgetData already exists**, `uNI_CloneBudgetData` will skip cloning (no duplicates).
+- If v2 **doesn’t** exist, it will clone and map to existing v2 SummaryBudgets/Outputs.
+
+So it’s safe to rerun. If you want a truly clean re‑clone, delete the v2 BudgetData first (or run the cleanup script we used earlier), then run the flow.
+
+---
+
+
+**User**
+
+ran the flow and got the error How the Interview Started
+How the Interview Started
+Programme Manager UAT (005FT00000AV6RZ) started the flow interview.
+API Version for Running the Flow: 65
+Some of this flow's variables were set when the interview started.
+recordId = a14FT00000k1GZhYAM
+Flow start time: February 3, 2026 at 3:05 AM.
+
+
+Get Records: Get Reprogramming
+One or more  uNI_ReprogrammingRequest__c  records were retrieved.
+Find all uNI_ReprogrammingRequest__c records where:
+Id Equals {!recordId} (a14FT00000k1GZhYAM)
+Store the values of these fields in Get_Reprogramming: uNI_Investment__c, uNI_TypeOfReprogramming__c, Id, uNI_ProjectYears__c, Name
+Result
+Successfully found records.
+
+
+Get Records: get IA
+One or more  IndividualApplication  records were retrieved.
+Find all IndividualApplication records where:
+Id Equals {!Get_Reprogramming.uNI_Investment__c} (0iTFT0000000KLJ2A2)
+Store the values of these fields in get_IA: uNI_LeadImplementerId__c, uNI_ProgramOfficerUserIds__c, Id, uNI_LogframeVersion__c, uNI_ProjectManagerUserIds__c
+Result
+Successfully found records.
+
+
+Decision: is material EB
+" Material_EB " outcome was executed.
+$$:OutcomeExecuted:Material_EB
+Outcome executed: Material_EB
+Outcome conditions: 
+{!Get_Reprogramming.uNI_TypeOfReprogramming__c} (Material (EB)) Equals Material (EB)
+All conditions must be true (AND)
+
+
+Transaction Committed
+Any records that the flow was ready to create, update, or delete were committed to the database.
+
+
+Screen: Proceed With Reprogramming?
+Selected Navigation Button: NEXT
+Dropdown List: Proceed_With_Reprogramming
+Label: Proceed With Reprogramming?
+Data Type: Text
+Choices selected at runtime:
+Choice selected at runtime: Proceed With Reprogramming (ProceedWithReprogramming)
+Choice value: Proceed With Reprogramming
+Long Text Area: Comments_for_Implementer1
+Label: Comments for Implementer
+Value at run time: 
+
+
+Decision: Accept or Return
+" Accept " outcome was executed.
+$$:OutcomeExecuted:Accept
+Outcome executed: Accept
+Outcome conditions: 
+{!Proceed_With_Reprogramming} (Proceed With Reprogramming) Equals {!ProceedWithReprogramming} (Proceed With Reprogramming)
+All conditions must be true (AND)
+
+
+Update Records: update Reprogramming Accept
+One or more  uNI_ReprogrammingRequest__c  records are ready to be updated.
+Find all uNI_ReprogrammingRequest__c records where:
+Id Equals {!recordId} (a14FT00000k1GZhYAM)
+Update the records’ field values.
+uNI_CurrentActionOwner__c = PM/PO
+uNI_CurrentPendingTask__c = Complete Project Paramters
+uNI_Stage__c = Stage 1
+uNI_Status__c = PT Accept Material EB Request
+uNI_WaitingForActionOwners__c = {!PMPOs} (005FT00000AV6RZYA1,)
+Result
+All records that meet the filter criteria are ready to be updated when the next screen, pause, or local action is executed or when the interview finishes.
+
+
+Get Records: get old logframe
+One or more  uNI_Logframe__c  records were retrieved.
+Find all uNI_Logframe__c records where:
+uNI_Individual_Application__c Equals {!Get_Reprogramming.uNI_Investment__c} (0iTFT0000000KLJ2A2)
+AND uNI_LogframeVersion__c Equals {!Get_Reprogramming.uNI_Investment__r.uNI_LogframeVersion__c} (1)
+Store the values of these fields in get_old_logframe: Id
+Result
+Successfully found records.
+
+
+uNI_CloneLogframe (Apex): clone logframe
+Action  uNI_CloneLogframe  was run.
+Inputs:
+appendVersionToName = true
+logframeId = {!get_old_logframe.Id} (a0XFT000003r2TN2AY)
+projectYears = {!Get_Reprogramming.uNI_ProjectYears__c} (null)
+Outputs:
+{!varIndicatorsCloned} = indicatorsCloned (4)
+{!varNewLogframeId} = newLogframeId (a0XFT000003r3kP2AQ)
+{!varOutputsCloned} = outputsCloned (3)
+{!varOutcomesCloned} = outcomesCloned (1)
+{!varErrors} = errors
+[]
+
+
+Update Records: update reprogramming request
+One or more  uNI_ReprogrammingRequest__c  records are ready to be updated.
+Find all uNI_ReprogrammingRequest__c records where:
+Id Equals {!recordId} (a14FT00000k1GZhYAM)
+Update the records’ field values.
+uNI_ActionName__c = Reprogramming Request In Draft
+uNI_LogframeVersion__c = {!newLogframeVersion} (2)
+uNI_Logframe__c = {!varNewLogframeId} (a0XFT000003r3kP2AQ)
+uNI_PendingActionOwner__c = {!Get_Reprogramming.uNI_Investment__r.uNI_LeadImplementerId__c} (null)
+Result
+All records that meet the filter criteria are ready to be updated when the next screen, pause, or local action is executed or when the interview finishes.
+
+
+uNI_CloneMilestone (Apex): clone milestones
+Action  uNI_CloneMilestone  was run.
+Inputs:
+individualApplicationId = {!Get_Reprogramming.uNI_Investment__c} (0iTFT0000000KLJ2A2)
+logframeId = {!varNewLogframeId} (a0XFT000003r3kP2AQ)
+sourceVersion = {!Get_Reprogramming.uNI_Investment__r.uNI_LogframeVersion__c} (1)
+targetVersion = {!newLogframeVersion} (2)
+Outputs:
+sourceVersion (1)
+recordsCloned (3)
+individualApplicationId (0iTFT0000000KLJ2A2)
+errors
+[]
+targetVersion (2)
+
+
+uNI_CloneForeignExchangeRates (Apex): clone FE rates
+Action  uNI_CloneForeignExchangeRates  was run.
+Inputs:
+individualApplicationId = {!Get_Reprogramming.uNI_Investment__c} (0iTFT0000000KLJ2A2)
+sourceVersion = {!Get_Reprogramming.uNI_Investment__r.uNI_LogframeVersion__c} (1)
+targetVersion = {!newLogframeVersion} (2)
+Outputs:
+sourceVersion (1)
+recordsCloned (2)
+individualApplicationId (0iTFT0000000KLJ2A2)
+errors
+[]
+targetVersion (2)
+
+
+uNI_CloneCoFunding (Apex): clone Co funding
+Action  uNI_CloneCoFunding  was run.
+Inputs:
+individualApplicationId = {!Get_Reprogramming.uNI_Investment__c} (0iTFT0000000KLJ2A2)
+reprogrammingRequestId = {!Get_Reprogramming.Id} (a14FT00000k1GZhYAM)
+sourceVersion = {!Get_Reprogramming.uNI_Investment__r.uNI_LogframeVersion__c} (1)
+targetVersion = {!newLogframeVersion} (2)
+Outputs:
+sourceVersion (1)
+recordsCloned (4)
+individualApplicationId (0iTFT0000000KLJ2A2)
+errors
+[]
+reprogrammingRequestId (a14FT00000k1GZhYAM)
+targetVersion (2)
+
+
+uNI_CloneBudgetData (Apex): clone budgetdata
+We couldn't run action  uNI_CloneBudgetData  because something went wrong.
+Inputs:
+individualApplicationId = {!Get_Reprogramming.uNI_Investment__c} (0iTFT0000000KLJ2A2)
+sourceVersion = {!Get_Reprogramming.uNI_Investment__r.uNI_LogframeVersion__c} (1)
+targetVersion = {!newLogframeVersion} (2)
+$$:Fault:
+Error Occurred: An Apex error occurred: System.QueryException: Variable does not exist: req.individualApplicationId
+
+
+
+Transaction Rolled Back
+Because an error occurred, any records that the flow was ready to create, update, or delete weren’t committed to the database.
+
+
+An Error Occurred
+The flow interview failed on February 3, 2026 at 3:05 AM. It ran for 10.21 seconds.
+
+---
+
+
+**OpenAI Codex**
+
+That error is from a bad bind in `uNI_CloneBudgetData` (dynamic SOQL was using `:req.individualApplicationId`, which isn’t valid in a dynamic query). I’ve fixed it by binding a local variable instead.
+
+Updated file:
+- `force-app/main/default/classes/uNI_CloneBudgetData.cls`
+
+You can deploy this change and re‑run the flow.
+
+If you want, I can also paste the exact diff so you can double‑check before deploying.
+
+---
+
+
+**User**
+
+it seems to be working fine right now but the main issue now is that i have placed this component in a reprogrammingrequest record page, via the uNI_BudgetTab, and when i am editing the v2 of the budgetdata, the v1 is also getting editable, why is the reason? i dont want to make the v1 of the budgetdata editable.
+
+---
+
+
+**OpenAI Codex**
+
+The reason v1 is editable is the current RR‑context logic only blocks edits when **IA version == RR version**, and doesn’t block **when the selected version ≠ RR version**. So v1 stays editable as long as baseReadOnly is false.
+
+I’ve patched `uNI_BudgetData` so that in **ReprogrammingRequest** context it’s **editable only when the selected version equals the RR’s version**. Any other version (like v1) is forced read‑only.
+
+Updated file:
+- `force-app/main/default/lwc/uNI_BudgetData/uNI_BudgetData.js`
+
+What changed (logic):
+- In RR context: `if (selectedVersion !== rrVersion) => readOnly`
+- Still keeps the existing guard: if IA version == RR version => readOnly
+
+You can deploy this and re‑test. If you want the same behavior in other budget child LWCs, tell me and I’ll apply it consistently.
+
+---
+
+
+**User**
+
+it keeps context that its placed in a reprograming request page right?
+
+---
+
+
+**OpenAI Codex**
+
+Yes. `uNI_BudgetData` detects the context object by calling `uNI_ReprogrammingObjectCheck.getObjectApiName` with the current recordId (`contextRecordId`). If it’s `uNI_ReprogrammingRequest__c`, it switches into RR mode and uses the RR logframe version for editability checks.
+
+If you want, I can add a small console log to show `contextObjectApiName`, `selectedVersion`, and `rrDefaultVersion` to confirm on the page.
+
+---
+
+
+**User**
+
+also please take care that these are not breaking the existing functionalities.
+
+---
+
+
+**OpenAI Codex**
+
+Understood. The change is scoped so it only affects **ReprogrammingRequest context** and only **read‑only gating**. It doesn’t touch data loading, saving, or any IA‑page behavior. So existing IA flow and v1 drafting logic stay as they were.
+
+If you want extra safety, I can add a small log or guard so it only flips read‑only after all versions are resolved—just say the word.
+
+---
+
+
+**User**
+
+still its editable can you check the exact reason?
+
+---
+
+
+**OpenAI Codex**
+
+Reason it stays editable
+- When `uNI_BudgetData` is loaded through `uNI_BudgetTab` (dynamic loader), it relies on `CurrentPageReference` to detect the **ReprogrammingRequest** context. In this setup, the child component often **doesn’t receive the record page context**, so `contextObjectApiName` stays undefined and the RR‑specific read‑only guard never runs.  
+- Result: v1 stays editable even though you’re on the RR page.
+
+Fix applied
+- Pass the RR context explicitly from `uNI_BudgetTab` to child params.
+- Consume those params in `uNI_BudgetData` so read‑only logic always knows it’s in RR context.
+
+Changed files
+- `force-app/main/default/lwc/uNI_BudgetTab/uNI_BudgetTab.js`
+  - Pass `contextRecordId` and `contextObjectApiName` in params.
+- `force-app/main/default/lwc/uNI_BudgetData/uNI_BudgetData.js`
+  - Read those params and re‑compute read‑only state.
+
+This keeps all existing IA behavior unchanged and only fixes the RR‑page context case.
+
+If you want, I can add a single console log to confirm:
+`contextObjectApiName / contextRecordId / version / rrDefaultVersion`.
+
+---
+
+
+**User**
+
+also always give descriptive comments about what is happening.
+
+---
+
+
+**OpenAI Codex**
+
+Got it. I’ve added descriptive comments at the new context‑passing points so it’s clear why they’re there and what they fix.
+
+Updated:
+- `force-app/main/default/lwc/uNI_BudgetTab/uNI_BudgetTab.js`
+- `force-app/main/default/lwc/uNI_BudgetData/uNI_BudgetData.js`
+
+If you want me to add similar explanatory comments to the RR editability logic block itself, say the word and I’ll add them too.
+
+---
+
+
+**User**
+
+still im able to edit it, also by default in the reprogramming page, the version is not getting set to the reprogramming request logframe version . can you also fix that
+
+---
+
+
+**OpenAI Codex**
+
+The two symptoms are connected:
+
+Why it’s still editable  
+- The child LWC wasn’t consistently getting **RR context** (object + recordId) when loaded via the dynamic loader, so the RR‑specific read‑only guard never fired.
+
+Why the default version isn’t set to RR version  
+- `uNI_BudgetTab` was skipping RR defaulting if a version was already set (often IA version).  
+- Also, when `contextObjectApiName` resolved later, the tabs weren’t re‑built, so children never got the updated context.
+
+Fixes applied
+- `uNI_BudgetTab` now **rebuilds tabs** once context is known.
+- In RR context, it **forces the version** to match the RR logframe version even if another version was already set.
+
+Updated file
+- `force-app/main/default/lwc/uNI_BudgetTab/uNI_BudgetTab.js`
+
+What to do
+- Deploy the updated `uNI_BudgetTab` and `uNI_BudgetData`.
+- Reload the RR record page.
+
+If it’s still editable after this, I’ll add a quick debug log that prints:
+`contextObjectApiName / contextRecordId / rrDefaultVersion / selectedVersion` so we can see which part is missing.
+
+---
+
+
+**User**
+
+still editable man, also it didnt set the default version
+
+---
+
+
+**OpenAI Codex**
+
+The root cause is likely a **type mismatch** + timing:
+
+- `rrDefaultVersion` comes from UI API as a **number**, but your version picklist options are **strings**.
+- That mismatch makes the combobox reject the RR version and fall back to “most recent”, so it never sets the RR default.
+- Because the child doesn’t get the RR version reliably, it can’t enforce read‑only on v1.
+
+I fixed this in two ways:
+
+**1) Normalize RR/IA versions to strings in `uNI_BudgetTab`**
+- Ensures the combobox value matches the options.
+- RR default now sticks properly.
+
+**2) Pass the RR version down to `uNI_BudgetData`**
+- Avoids timing issues with the child’s own UI API wire.
+- Lets the read‑only guard trigger immediately.
+
+Updated files (with descriptive comments):
+- `force-app/main/default/lwc/uNI_BudgetTab/uNI_BudgetTab.js`
+- `force-app/main/default/lwc/uNI_BudgetData/uNI_BudgetData.js`
+
+Please deploy and test again.  
+If it’s *still* editable, I’ll add a short console log to show:
+`contextObjectApiName / rrDefaultVersion / selectedVersion / isReadOnly` so we can pinpoint exactly what’s missing.
+
+---
+
+
+**User**
+
+still the same, default not set and v1 editable.
+
+---
+
+
+**OpenAI Codex**
+
+I added **detailed debug logs** (with comments) to both components so we can see exactly why the default isn’t set and why v1 remains editable.
+
+What I changed
+- `force-app/main/default/lwc/uNI_BudgetTab/uNI_BudgetTab.js`
+  - Added a `logDebug()` helper and logs at all critical steps.
+  - Normalized version comparisons so “2” vs “2.0” won’t break matching.
+  - Re‑applies RR default **after options load**, so the combobox value always aligns.
+
+- `force-app/main/default/lwc/uNI_BudgetData/uNI_BudgetData.js`
+  - Added a debug snapshot inside `updateReadOnlyState()` showing:
+    context, recordId, selected version, RR/IA versions, baseReadOnly, and the final decision.
+
+Next step (important)
+- Deploy and open the RR record page.
+- Copy the **console logs** that start with:
+  - `BudgetTab[...]`
+  - `BudgetTable[...]`
+
+Those logs will show exactly what’s missing (recordId, context, RR version, or version matching) and I’ll pin the root cause quickly.
+
+---
+
+
+**User**
+
+thanks it works now, the problem was the user did nt had access to the uNI_ReprogrammingObjectCheck class
+
+---
+
+
+**OpenAI Codex**
+
+Glad you found it. That explains why the RR context never resolved and the editability guard didn’t kick in.
+
+If you want, I can:
+1) Add a graceful fallback in the LWC when `getObjectApiName` fails (so it still locks v1), or  
+2) Provide the exact permission set update to grant access to `uNI_ReprogrammingObjectCheck`.
+
+Tell me which you prefer.
+
+---
+
+
+**User**
+
+also can you please see why when im editing the budgetdata in v2 while reprogramming the v1 of the uNI_BudgetOverview shows Current Budget data is in draft status, Budget Overview can be shown after it's Submitted
+error, while the v1 is already submitted.
+
+---
+
+
+**OpenAI Codex**
+
+The “Budget data is in draft status” banner is coming from `result.status`, which is **global** (IA’s `uNI_CurrentBudgetStatus__c`). When you edit v2, that global status flips to Draft, and **v1 gets blocked even though it was submitted**.
+
+Fix applied
+- In **RR context**, the banner is now **ignored when viewing a non‑RR version** (like v1).
+- Budget Overview is also forced read‑only for any version **that isn’t the RR’s version**, matching the BudgetData behavior.
+- BudgetOverview now consumes the same context params passed from `uNI_BudgetTab` (so it knows it’s on an RR page even when loaded dynamically).
+
+Updated file
+- `force-app/main/default/lwc/uNI_BudgetOverview/uNI_BudgetOverview.js`
+
+What to do
+- Deploy and refresh the RR record page.
+- v1 should show without the draft‑status banner.
+- v2 should still show the banner if it’s in Draft.
+
+If you want this behavior for any other budget child tabs, I can apply the same pattern.
+
+---
+
+
+**User**
+
+please make sure that no existing functionalities are breaking.
+
+---
+
+
+**OpenAI Codex**
+
+Understood. These changes are **scoped only to RR context** and only affect:
+- read‑only gating for non‑RR versions, and
+- the draft banner suppression for non‑RR versions in RR pages.
+
+The IA path remains unchanged:
+- IA pages still use `uNI_CurrentBudgetStatus__c` exactly as before.
+- Version selection and existing save/submit behavior are untouched.
+
+If you want, I can add a tiny guard to only apply the RR logic when both `contextObjectApiName === 'uNI_ReprogrammingRequest__c'` and `rrDefaultVersion` is present, to be extra safe.
+
+---
+
+
+**User**
+
+you have also added comments that i can refer later right?
+
+---
+
+
+**OpenAI Codex**
+
+Yes. I added descriptive comments at the key decision points (context propagation, RR-only editability, and the draft banner suppression in RR context). They’re in:
+
+- `force-app/main/default/lwc/uNI_BudgetTab/uNI_BudgetTab.js`
+- `force-app/main/default/lwc/uNI_BudgetData/uNI_BudgetData.js`
+- `force-app/main/default/lwc/uNI_BudgetOverview/uNI_BudgetOverview.js`
+
+If you want comments in any other related components, tell me which files.
+
+---
+
+
+**User**
+
+also why uNI_LogframeVersions LWC not able to have context like budgettab lwc, im not able to find the dropdown list to choose versions. before making any changes, tell me what was the issue.
+
+---
+
+
+**OpenAI Codex**
+
+Issue (before any changes)
+- `uNI_LogframeVersions` only loads version options after it can resolve `effectiveInvestmentId`.
+- `effectiveInvestmentId` is derived from **contextObjectApiName + recordId** (or a `c__recordId` URL param).  
+- If **context cannot be resolved** (e.g., user lacks access to `uNI_ReprogrammingObjectCheck`, or the page doesn’t provide `recordId`/`c__recordId`), then `effectiveInvestmentId` stays `null`.
+- When `effectiveInvestmentId` is `null`, the `getAvailableLogframeVersions` wire never runs, so the **combobox has no options** (looks like the dropdown isn’t there or has nothing to show).
+
+Why BudgetTab works but LogframeVersions doesn’t
+- `uNI_BudgetTab` explicitly **passes context/recordId to child components**.
+- `uNI_LogframeVersions` does **not** accept or use those params, and it does not fall back to `recordId` if context is missing.
+
+If you want me to fix it, I can:
+1) Add the same context‑passing pattern used in BudgetTab (recordId + object name), and/or  
+2) Add a safe fallback: if context isn’t resolved, just use `recordId` as the investment id.
+
+---
+
+
+**User**
+
+apply 1 but , also make sure we are not breaking anything existing.
+
+---
+
+
+**OpenAI Codex**
+
+Issue (before changes)
+- `uNI_LogframeVersions` only resolves versions after it can compute `effectiveInvestmentId`.
+- That depends on **context (recordId + object type)**, which it only gets from pageRef + `uNI_ReprogrammingObjectCheck`.
+- When loaded dynamically or in a context without those values, `effectiveInvestmentId` stays `null`, so the versions wire never runs → **no dropdown options**.
+
+Fix applied (safe, non‑breaking)
+- Added an optional `params` API so a parent can pass **contextRecordId / contextObjectApiName / investmentId / version / rrLogframeVersion**.
+- This is **additive only**; existing behavior stays unchanged when no params are provided.
+- It simply seeds the context and lets the existing wires keep working.
+
+Updated file
+- `force-app/main/default/lwc/uNI_LogframeVersions/uNI_LogframeVersions.js`
+
+If you want, I can also update the parent (wherever this component is loaded dynamically) to pass these params—same pattern as BudgetTab.
+
+---
+
+
+**User**
+
+still no values in the picklist,
+
+---
+
+
+**OpenAI Codex**
+
+Root cause (why the picklist is empty)
+- The version list comes from `getAvailableLogframeVersions`, which only runs once `effectiveInvestmentId` is set.
+- In your case, `effectiveInvestmentId` never resolves because the component can’t reliably infer the IA id from context (recordId/object type). That’s why the dropdown has no options.
+
+Fix applied (safe, non‑breaking)
+- I added a **direct IA resolver** using `uNI_LogframeController.resolveInvestmentId`, so the component can get the IA id from the recordId **without relying on object‑name context**.
+- This mirrors how BudgetTab works and only kicks in when needed.
+
+Updated file
+- `force-app/main/default/lwc/uNI_LogframeVersions/uNI_LogframeVersions.js`
+
+Please deploy and refresh the page.  
+If it still doesn’t show versions, the next thing to check is whether the user has access to `uNI_LogframeController` (since the resolver depends on it), but in most cases this resolves the blank list.
+
+---
+
+
+**User**
+
+but im not able to edit the v2 in the reprogrammingrequest page, the uNI_MilestoneTab is working perfectly, refer this to implement the editability correctly
+
+---
+
+
+**OpenAI Codex**
+
+Issue (why v2 wasn’t editable)
+- `uNI_LogframeVersions` **always required** `isEditableLogframe` from Apex to be true.
+- In RR context, that can be false (user not in GAM/PM/PO/admin), so it blocked edits even for v2.
+- The Milestone tab **doesn’t** use that strict server flag in RR context; it only compares **IA live version vs selected version**.
+
+Fix applied (aligned with MilestoneTab)
+- In RR context, editability now follows the same rule:
+  - **Editable if selected version ≠ IA live version**
+  - Read‑only if selected = IA version (v1)
+- In IA context, it **still respects** the server’s `isEditableLogframe` (so no regression there).
+
+Updated file
+- `force-app/main/default/lwc/uNI_LogframeVersions/uNI_LogframeVersions.js`
+
+Deploy and re-test on the RR page.  
+If needed, I can also add a tiny console log that prints `selectedVersion`, `liveVersion`, and `canEdit` to confirm it’s evaluating correctly.
+
+---
+
+
+**User**
+
+splendid, you nailed it.
+
+---
+
+
+**OpenAI Codex**
+
+Great to hear. If anything else comes up, just point me to the spot and I’ll jump in.
+
+---

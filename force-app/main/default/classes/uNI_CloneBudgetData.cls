@@ -138,6 +138,23 @@ public without sharing class uNI_CloneBudgetData {
         return value;
     }
 
+    private static String normalizeKeyPart(Object value) {
+        if (value == null) {
+            return '';
+        }
+        return String.valueOf(value).trim().toLowerCase();
+    }
+
+    private static String summaryBudgetKey(uNI_SummaryBudget__c sb) {
+        List<String> parts = new List<String>{
+            normalizeKeyPart(sb.Name),
+            normalizeKeyPart(sb.Expense_type__c),
+            normalizeKeyPart(sb.uNI_Investment_record_type__c),
+            normalizeKeyPart(sb.is_Full_Row_Span__c)
+        };
+        return String.join(parts, '||');
+    }
+
     private static Boolean hasTargetVersionRecords(String objectApiName, Id indAppId, Object versionValue) {
         if (indAppId == null || versionValue == null) {
             return false;
@@ -195,9 +212,6 @@ public without sharing class uNI_CloneBudgetData {
 
         Object targetVersionValue =
             normalizeVersionValue(req.targetVersion, uNI_SummaryBudget__c.uNI_Version__c);
-        if (hasTargetVersionRecords('uNI_SummaryBudget__c', req.individualApplicationId, targetVersionValue)) {
-            return idMap;
-        }
 
         List<uNI_SummaryBudget__c> src = [
             SELECT Id,
@@ -230,8 +244,38 @@ public without sharing class uNI_CloneBudgetData {
             return idMap;
         }
 
+        // Pull any existing target version rows so we can map BudgetData → SummaryBudget even on re-runs.
+        List<uNI_SummaryBudget__c> target = new List<uNI_SummaryBudget__c>();
+        if (targetVersionValue != null) {
+            Id indAppId = req.individualApplicationId;
+            Object targetVersionValueLocal = targetVersionValue;
+            String targetSoql =
+                'SELECT Id, Name, is_Full_Row_Span__c, uNI_Investment_record_type__c, Expense_type__c, uNI_Version__c ' +
+                'FROM uNI_SummaryBudget__c ' +
+                'WHERE uNI_IndividualApplication__c = :indAppId ' +
+                'AND uNI_Version__c = :targetVersionValueLocal';
+            target = (List<uNI_SummaryBudget__c>) Database.query(targetSoql);
+        }
+
+        Map<String, Id> targetByKey = new Map<String, Id>();
+        for (uNI_SummaryBudget__c t : target) {
+            String key = summaryBudgetKey(t);
+            if (!targetByKey.containsKey(key)) {
+                targetByKey.put(key, t.Id);
+            }
+        }
+
         List<uNI_SummaryBudget__c> clones = new List<uNI_SummaryBudget__c>();
+        List<Id> cloneSourceIds = new List<Id>();
+        List<String> cloneKeys = new List<String>();
         for (uNI_SummaryBudget__c sb : src) {
+            String key = summaryBudgetKey(sb);
+            Id existingId = targetByKey.get(key);
+            if (existingId != null) {
+                idMap.put(sb.Id, existingId);
+                continue;
+            }
+
             uNI_SummaryBudget__c copy = sb.clone(false, false, false);
             copy.uNI_IndividualApplication__c = req.individualApplicationId;
             setVersionFromFlow(
@@ -240,19 +284,24 @@ public without sharing class uNI_CloneBudgetData {
                 uNI_SummaryBudget__c.uNI_Version__c
             );
             clones.add(copy);
+            cloneSourceIds.add(sb.Id);
+            cloneKeys.add(key);
         }
 
-        Database.SaveResult[] results = Database.insert(clones, false);
-        for (Integer i = 0; i < results.size(); i++) {
-            Database.SaveResult sr = results[i];
-            if (sr.isSuccess()) {
-                res.summaryBudgetsCloned++;
-                idMap.put(src[i].Id, sr.getId());
-            } else if (sr.getErrors() != null && !sr.getErrors().isEmpty()) {
-                res.errors.add(
-                    'SummaryBudget clone failed (source Id: ' + src[i].Id + '): ' +
-                    sr.getErrors()[0].getMessage()
-                );
+        if (!clones.isEmpty()) {
+            Database.SaveResult[] results = Database.insert(clones, false);
+            for (Integer i = 0; i < results.size(); i++) {
+                Database.SaveResult sr = results[i];
+                if (sr.isSuccess()) {
+                    res.summaryBudgetsCloned++;
+                    idMap.put(cloneSourceIds[i], sr.getId());
+                    targetByKey.put(cloneKeys[i], sr.getId());
+                } else if (sr.getErrors() != null && !sr.getErrors().isEmpty()) {
+                    res.errors.add(
+                        'SummaryBudget clone failed (source Id: ' + cloneSourceIds[i] + '): ' +
+                        sr.getErrors()[0].getMessage()
+                    );
+                }
             }
         }
 
@@ -333,8 +382,7 @@ public without sharing class uNI_CloneBudgetData {
 
         Object targetVersionValue =
             normalizeVersionValue(req.targetVersion, uNI_BudgetData__c.uNI_Version__c);
-        if (hasTargetVersionRecords('uNI_SummaryBudget__c', req.individualApplicationId, targetVersionValue) ||
-            hasTargetVersionRecords('uNI_BudgetData__c', req.individualApplicationId, targetVersionValue)) {
+        if (hasTargetVersionRecords('uNI_BudgetData__c', req.individualApplicationId, targetVersionValue)) {
             return count;
         }
 

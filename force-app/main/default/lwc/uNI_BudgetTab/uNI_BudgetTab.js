@@ -33,6 +33,23 @@ export default class UNI_BudgetTab extends LightningElement {
     rrDefaultLoaded = false;
     defaultAttempted = false;
     mostRecentVersion;
+    // Normalize versions to string so they match combobox option values.
+    _normalizeVersionValue(val) {
+        if (val === undefined || val === null || val === '') return null;
+        return String(val).trim();
+    }
+
+    // Debug helper to see why defaults are not applied on RR pages.
+    logDebug(label) {
+        // eslint-disable-next-line no-console
+        console.log(
+            `BudgetTab[${label}] recordId=${this._recordId} ` +
+            `context=${this.contextObjectApiName} ` +
+            `iaVersion=${this.iaDefaultVersion} rrVersion=${this.rrDefaultVersion} ` +
+            `selected=${this.version} mostRecent=${this.mostRecentVersion} ` +
+            `options=${(this.logframeVersionOptions || []).map(o => o.value).join(',')}`
+        );
+    }
 
     @api
     get recordId() {
@@ -100,6 +117,7 @@ export default class UNI_BudgetTab extends LightningElement {
         if (data !== undefined) {
             this.effectiveInvestmentId = data; // could be null
             this.initTabs();
+            this.logDebug('resolveInvestmentId');
         }
     }
 
@@ -108,7 +126,11 @@ export default class UNI_BudgetTab extends LightningElement {
     wiredObjectType({ data, error }) {
         if (data) {
             this.contextObjectApiName = data;
+            // Context drives default version selection and must be forwarded to child tabs.
+            // Rebuild tab params so children receive the correct context immediately.
+            this.initTabs();
             this._attemptSetDefaultVersion();
+            this.logDebug('contextResolved');
         } else if (error) {
             console.error('Error resolving context object type', error);
         }
@@ -130,9 +152,11 @@ export default class UNI_BudgetTab extends LightningElement {
     })
     wiredIA({ data, error }) {
         if (data) {
-            this.iaDefaultVersion = getFieldValue(data, VERSION_FIELD);
+            // Store as string for consistent comparisons and combobox matching.
+            this.iaDefaultVersion = this._normalizeVersionValue(getFieldValue(data, VERSION_FIELD));
             this.iaDefaultLoaded = true;
             this._attemptSetDefaultVersion();
+            this.logDebug('iaLoaded');
         } else if (error) {
             // Optional: log error
             console.error('Error loading IA for version', error);
@@ -152,19 +176,39 @@ export default class UNI_BudgetTab extends LightningElement {
     })
     wiredRR({ data, error }) {
         if (data) {
-            this.rrDefaultVersion = getFieldValue(data, RR_VERSION_FIELD);
+            // Store as string for consistent comparisons and combobox matching.
+            this.rrDefaultVersion = this._normalizeVersionValue(getFieldValue(data, RR_VERSION_FIELD));
             this.rrDefaultLoaded = true;
             this._attemptSetDefaultVersion();
+            this.logDebug('rrLoaded');
         } else if (error) {
             console.error('Error loading Reprogramming Request for version', error);
         }
     }
 
+    _resolveVersionOptionValue(rawVersion) {
+        const normalized = this._normalizeVersionValue(rawVersion);
+        if (!normalized || !this.logframeVersionOptions || this.logframeVersionOptions.length === 0) {
+            return normalized;
+        }
+        if (this.logframeVersionOptions.some(o => o.value === normalized)) {
+            return normalized;
+        }
+        const rawNum = Number(normalized);
+        if (!Number.isNaN(rawNum)) {
+            const match = this.logframeVersionOptions.find(o => {
+                const n = Number(o.value);
+                return !Number.isNaN(n) && n === rawNum;
+            });
+            if (match) {
+                return match.value;
+            }
+        }
+        return normalized;
+    }
+
     _attemptSetDefaultVersion() {
         if (!this.contextObjectApiName) {
-            return;
-        }
-        if (this.version) {
             return;
         }
 
@@ -172,8 +216,10 @@ export default class UNI_BudgetTab extends LightningElement {
             if (!this.rrDefaultLoaded) {
                 return;
             }
-            if (this.rrDefaultVersion) {
-                this.version = this.rrDefaultVersion;
+            // In RR context, always align the default to the RR's logframe version.
+            const resolvedRR = this._resolveVersionOptionValue(this.rrDefaultVersion);
+            if (resolvedRR && this.version !== resolvedRR) {
+                this.version = resolvedRR;
                 this.initTabs();
             }
             this.defaultAttempted = true;
@@ -181,6 +227,7 @@ export default class UNI_BudgetTab extends LightningElement {
                 this.version = this.mostRecentVersion;
                 this.initTabs();
             }
+            this.logDebug('defaultRR');
             return;
         }
 
@@ -188,8 +235,9 @@ export default class UNI_BudgetTab extends LightningElement {
             if (!this.iaDefaultLoaded) {
                 return;
             }
-            if (this.iaDefaultVersion) {
-                this.version = this.iaDefaultVersion;
+            const resolvedIA = this._resolveVersionOptionValue(this.iaDefaultVersion);
+            if (resolvedIA) {
+                this.version = resolvedIA;
                 this.initTabs();
             }
             this.defaultAttempted = true;
@@ -197,6 +245,7 @@ export default class UNI_BudgetTab extends LightningElement {
                 this.version = this.mostRecentVersion;
                 this.initTabs();
             }
+            this.logDebug('defaultIA');
             return;
         }
 
@@ -261,6 +310,15 @@ export default class UNI_BudgetTab extends LightningElement {
                     this.initTabs();
                 }
             }
+            // If we already know the RR version, re-apply it after options load.
+            if (this.contextObjectApiName === 'uNI_ReprogrammingRequest__c' && this.rrDefaultVersion) {
+                const resolvedRR = this._resolveVersionOptionValue(this.rrDefaultVersion);
+                if (resolvedRR && this.version !== resolvedRR) {
+                    this.version = resolvedRR;
+                    this.initTabs();
+                }
+            }
+            this.logDebug('versionsLoaded');
         } else if (error) {
             this.versionLoadError = error;
             console.error('Error loading versions', error);
@@ -271,6 +329,7 @@ export default class UNI_BudgetTab extends LightningElement {
     handleVersionChange(event) {
         this.version = event.detail.value;
         this.initTabs();
+        this.logDebug('versionChange');
     }
 
     // ---- Tabs setup ----
@@ -279,9 +338,15 @@ export default class UNI_BudgetTab extends LightningElement {
             return;
         }
 
+        // Pass both the resolved IA id and the page context so child LWCs
+        // can enforce RR-specific editability rules even when loaded dynamically.
         const params = {
             recordId: this.effectiveInvestmentId,
-            version: this.version // this is what you selected in combobox
+            version: this.version, // selected in combobox
+            contextRecordId: this.recordIdForWire || this._recordId,
+            contextObjectApiName: this.contextObjectApiName,
+            // Provide RR version to child LWCs to avoid timing issues with their own wires.
+            rrLogframeVersion: this.rrDefaultVersion
         };
 
         this.tabs = [
@@ -324,6 +389,7 @@ export default class UNI_BudgetTab extends LightningElement {
         } else {
             this.activeTab = this.tabs[0];
         }
+        this.logDebug('initTabs');
     }
 
     // ---- Tab click handler ----

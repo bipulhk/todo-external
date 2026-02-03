@@ -1,0 +1,138 @@
+.gad-frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 320px;
+  border: 1px solid #d8dde6;
+  border-radius: 0.5rem;
+  background: #ffffff;
+}
+
+.gad-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #d8dde6;
+  background: #f9fafb;
+  flex-wrap: wrap;
+}
+
+.gad-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.gad-subtitle {
+  margin: 0.25rem 0 0;
+  color: #5c6b7a;
+  font-size: 0.875rem;
+}
+
+.gad-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #d8dde6;
+  background: #f4f6f9;
+  flex-wrap: wrap;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 0.5rem 0.875rem;
+  cursor: pointer;
+  font-weight: 600;
+  border-radius: 0.25rem;
+  color: #1f2a44;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-button:hover {
+  background-color: #e8f0fe;
+}
+
+.tab-button.active {
+  border-bottom-color: #0070d2;
+  background-color: #ffffff;
+}
+
+.more-menu {
+  margin-left: auto;
+}
+
+.more-menu.active {
+  --slds-c-button-text-color: #0070d2;
+  --slds-c-button-text-color-hover: #005fb2;
+}
+
+.gad-content {
+  padding: 1rem 1.25rem 1.5rem;
+}
+
+.matrix {
+  border: 1px solid #d8dde6;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  padding: 1rem;
+}
+
+.matrix-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1f2a44;
+}
+
+.matrix-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.matrix-card {
+  border: 1px solid #e1e7ef;
+  border-radius: 0.4rem;
+  padding: 0.75rem 0.85rem;
+  background: #ffffff;
+}
+
+.matrix-heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1f2a44;
+}
+
+.matrix-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #344054;
+}
+
+.matrix-text {
+  margin: 0;
+  color: #344054;
+}
+
+.stage-panel {
+  border: 1px solid #d8dde6;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  background: #ffffff;
+}
+
+.stage-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1f2a44;
+}
+
+.stage-text {
+  margin: 0;
+  color: #344054;
+}

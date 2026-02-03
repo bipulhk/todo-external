@@ -1,0 +1,136 @@
+<template>
+  <section class="gad-frame">
+    <header class="gad-header">
+      <div>
+        <h2 class="gad-title">GAD</h2>
+        <p class="gad-subtitle">Manage stage feedback and reviews for this GAD record.</p>
+      </div>
+      <lightning-button
+        label="Provide GAD Feedback"
+        variant="brand"
+        onclick={handleProvideFeedback}
+      ></lightning-button>
+    </header>
+
+    <nav class="gad-tabs" aria-label="GAD Tabs">
+      <template for:each={tabsForRender} for:item="tab">
+        <button
+          key={tab.id}
+          class={tab.cssClass}
+          data-id={tab.id}
+          onclick={handleTabClick}
+          title={tab.label}
+        >
+          {tab.label}
+        </button>
+      </template>
+      <template if:true={hasMoreTabs}>
+        <lightning-button-menu
+          label="More"
+          alternative-text="More tabs"
+          onselect={handleMoreSelect}
+          class={moreMenuClass}
+        >
+          <template for:each={moreTabs} for:item="tab">
+            <lightning-menu-item key={tab.id} value={tab.id} label={tab.label}></lightning-menu-item>
+          </template>
+        </lightning-button-menu>
+      </template>
+    </nav>
+
+    <div class="gad-content">
+      <template if:true={isFeedbackMatrix}>
+        <section class="matrix">
+          <h3 class="matrix-title">Feedback Matrix</h3>
+          <div class="matrix-grid">
+            <div class="matrix-card">
+              <h4 class="matrix-heading">JRC/EB Comments</h4>
+              <ul class="matrix-list">
+                <li><strong>JRC Comments:</strong> Voting starts</li>
+                <li><strong>EB Comments:</strong></li>
+              </ul>
+            </div>
+            <div class="matrix-card">
+              <h4 class="matrix-heading">Comment by PM/PO</h4>
+              <p class="matrix-text">No comments provided yet.</p>
+            </div>
+            <div class="matrix-card">
+              <h4 class="matrix-heading">PRC Analysis</h4>
+              <p class="matrix-text">Pending PRC review.</p>
+            </div>
+          </div>
+        </section>
+      </template>
+
+      <template if:true={isStage1}>
+        <section class="stage-panel">
+          <h3 class="stage-title">Stage 1</h3>
+          <p class="stage-text">Stage 1 materials will appear here.</p>
+        </section>
+      </template>
+
+      <template if:true={isStage2}>
+        <section class="stage-panel">
+          <h3 class="stage-title">Stage 2</h3>
+          <p class="stage-text">Stage 2 materials will appear here.</p>
+        </section>
+      </template>
+
+      <template if:true={isStage3}>
+        <section class="stage-panel">
+          <h3 class="stage-title">Stage 3</h3>
+          <p class="stage-text">Stage 3 materials will appear here.</p>
+        </section>
+      </template>
+
+      <template if:true={isOmtReview}>
+        <section class="stage-panel">
+          <h3 class="stage-title">OMT Review</h3>
+          <p class="stage-text">OMT review details will appear here.</p>
+        </section>
+      </template>
+
+      <template if:true={isStage4}>
+        <section class="stage-panel">
+          <h3 class="stage-title">Stage 4</h3>
+          <p class="stage-text">Stage 4 materials will appear here.</p>
+        </section>
+      </template>
+
+      <template if:true={isStage5}>
+        <section class="stage-panel">
+          <h3 class="stage-title">Stage 5</h3>
+          <p class="stage-text">Stage 5 materials will appear here.</p>
+        </section>
+      </template>
+
+      <template if:true={isMoreTab}>
+        <section class="stage-panel">
+          <h3 class="stage-title">{activeTab.label}</h3>
+          <p class="stage-text">Additional GAD resources will appear here.</p>
+        </section>
+      </template>
+    </div>
+  </section>
+
+  <template if:true={showFeedbackModal}>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium">
+      <div class="slds-modal__container">
+        <header class="slds-modal__header">
+          <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={handleFeedbackClose}>
+            <lightning-icon icon-name="utility:close" size="small"></lightning-icon>
+          </button>
+          <h2 class="slds-text-heading_medium">Provide GAD Feedback</h2>
+        </header>
+        <div class="slds-modal__content slds-p-around_medium">
+          <c-u-n-i_-feedback-form
+            record-id={recordId}
+            onclose={handleFeedbackClose}
+            onfeedbacksubmitted={handleFeedbackClose}
+          ></c-u-n-i_-feedback-form>
+        </div>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+</template>

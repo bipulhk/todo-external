@@ -134,7 +134,8 @@ import RR_RecordTypeId from '@salesforce/schema/uNI_ReprogrammingRequest__c.Reco
 import IA_OBJECT from '@salesforce/schema/IndividualApplication';
 import RR_OBJECT from '@salesforce/schema/uNI_ReprogrammingRequest__c';
 import PROFILE_NAME from '@salesforce/schema/User.Profile.Name';
-
+import RR_isUserPT from '@salesforce/schema/uNI_ReprogrammingRequest__c.uNI_Investment__r.uNI_IsUserPT__c';
+import RR_isSubmittedForSMT from '@salesforce/schema/uNI_ReprogrammingRequest__c.uNI_IsSubmittedforSMTClearance__c';
 // --- USER FIELDS ---
 import USER_TITLE from '@salesforce/schema/User.Title';
 
@@ -271,7 +272,9 @@ const RR_RECORD_FIELDS = [
     RR_uNI_IsProjectParameterCreatedForRep__c,
     RR_uNI_IsUserActionOwner__c,
     RR_uNI_IsUserPMOrPO__c,
-    RR_uNI_IsUserSecondaryOwner__c
+    RR_uNI_IsUserSecondaryOwner__c,
+    RR_isUserPT,
+    RR_isSubmittedForSMT
 ];
 
 
@@ -439,16 +442,7 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                             type: 'flow',
                             flowApi: 'uNI_Financial_Audit_Initiate_Process'
                         },
-                        { label: 'Assessment Response', value: 'Assessment_Response', type: 'placeholder' },
-                        { label: 'Assign Reviewers', value: 'addReviewer', type: 'flow', flowApi: 'DUMMY_FLOW_API' },
-                        
                         { label: 'Update Management Action', value: 'startClosure', type: 'placeholder' },
-                        {
-                            label: 'Add Reviewer',
-                            value: 'addReviewer',
-                            type: 'flow',
-                            flowApi: 'DUMMY_FLOW_API'
-                        },
                         {
                             label: 'Cancel GAD',
                             value: 'cancelGad',
@@ -646,11 +640,10 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                       
                         { label: 'Complete Assessment', value: 'completeAssessment', type: 'flow', flowApi: 'uNI_ChangeIndividualApplicationReviewLevel' },
                                                 { label: 'New Risk Register', value: 'uNI_RiskRegisterNewTab', type: 'LWC' },
-                        { label: 'View L3 Scores', value: 'uNI_ViewL3Scores', type: 'LWC' },
                         { label: 'Log Annual Report', value: 'uNI_Log_Annual_Report', type: 'placeholder' },
                         { label: 'Person(s) reviewing',value: 'uNI_AddmembertoIA', type: 'flow', flowApi: 'uNI_AddmembertoIA' },
                         { label: 'Create Contributor User', value: 'uNI_Create_Contributor_User', type: 'placeholder' },
-                        { label: 'Provide Proposal Feedback', value: 'uNI_ProvideProposalFeedback', type: 'placeholder' },
+                        { label: 'Provide Proposal Feedback', value: 'uNI_FeedbackForm', type: 'LWC' },
                         { label: 'Report Incident', value: 'Report_Incident', type: 'placeholder' },
                         // { label: 'Edit Implementer and Contributor', value: 'editImplementerAndContributor', type: 'flow', flowApi: 'uNI_EditContributor' },
     {
@@ -864,19 +857,8 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                         { label: 'Submit FENSA Request', value: 'Submit_FENSA', type: 'placeholder' },
     
     
-                        { label: 'Proposal Assessment Report', value: 'uNI_ProposalAssessmentReport', type: 'placeholder' },
                         { label: 'Provide GAD Feedback', value: 'Provide_GAD_Feedback', type: 'placeholder' },
                        
-
-                        // --- GENERIC BUTTONS ---
-                        
-                       
-                        { label: 'Notify Proponent', value: 'notifyProponent', type: 'url', url: '/lightning/cmp/c__YourOmniScriptComponent' },
-                        { label: 'Score Proposal Assessment', value: 'uNI_ScoreAssessmentNewTab', type: 'LWC' },
-                        { label: 'Complete Assessment', value: 'completeAssessment', type: 'flow', flowApi: 'uNI_ChangeIndividualApplicationReviewLevel' },
-                                                { label: 'New Risk Register', value: 'uNI_RiskRegisterNewTab', type: 'LWC' }
-
-
                     ]
                 },
                 {
@@ -1740,28 +1722,16 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                 const label = action.label;
 
                 // Visibility: always shown (common menu entries).
-                if (label === 'Administer' || label === 'Manage' || label === 'Report Incident') {
+                if (label === 'Administer' || label === 'Manage') {
                     return true;
                 }
 
                 // --- Proposal Application ---
                 // Visibility: Proposal record type only.
-                if (label === 'Add Reviewer') {
-                    return isIaProposal;
-                }
-                // Visibility: Proposal record type only.
-                else if (label === 'Assessment Response') {
-                    return isIaProposal;
-                }
-                // Visibility: Proposal record type only.
-                else if (label === 'Assign Reviewers') {
-                    return isIaProposal;
-                }
-                else if (label === 'Complete Assessment') {
+                if (label === 'Complete Assessment') {
                     // Visibility: Proposal record type + status-specific completion flags.
                     if (!isIaProposal) return false;
-                    if (iaStatus === 'Level 1 Review' && allL1) return true;
-                    if (iaStatus === 'Level 2 Review' && allL2) return true;
+                    
                     if (iaStatus === 'Level 3 Review' && jrcReviewCompleted) return true;
                     return false;
                 }
@@ -1770,9 +1740,6 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                     return isIaProposal;
                 }
                 // Visibility: Proposal record type only.
-                else if (label === 'Proposal Assessment Report') {
-                    return isIaProposal;
-                }
                 // Visibility: Proposal record type only.
                 else if (label === 'Provide Proposal Feedback') {
                     return isIaProposal;
@@ -1784,10 +1751,11 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                     return (questionsFinalized && validStatuses.includes(iaStatus) && iaStatus !== 'Ready for EB Review');
                 }
                 // Visibility: Proposal record type only.
-                else if (label === 'View L3 Scores') {
-                    return isIaProposal;
+                // --- Investment ---
+                else if (label === 'Report Incident') {
+                    // Visibility: Investment record type only.
+                    return isIaInvestment;
                 }
-
                 // --- Investment ---
                 else if (label === 'Create Closure') {
                     // Visibility: Investment record type + Actively Closing + closure not initiated.
@@ -1958,7 +1926,7 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                 }
                 else if (label === 'Project Parameters') {
                     // Visibility: GAD + PM/PO or System Admin.
-                    return (isIaGad|| isIaInvestment) && (isPMPO || isSysAdmin);
+                    return (isIaGad|| isIaInvestment);
                 }
                 else if (label === 'Provide GAD Feedback') {
                     // Visibility: GAD record type (no additional gating).
@@ -2142,7 +2110,10 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
         const rrProjParams = getFieldValue(data, RR_uNI_IsProjectParameterCreatedForRep__c);
         const rrIsStage1Defined = getFieldValue(data, RR_uNI_isStage1Defined__c);
 
-        const rrIsPT = rrIsSecondaryOwner;
+        const rrIsPT = getFieldValue(data, RR_isUserPT);
+        const rrIsSubmittedForSMT= getFieldValue(data, RR_isSubmittedForSMT);
+
+        console.log(' pt value '+rrIsPT);
 
         this.ACTION_CONFIG.uNI_ReprogrammingRequest__c.menus.forEach(menu => {
             const originalLabels = menu.actions.map(action => action.label);
@@ -2161,7 +2132,13 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
 
                 // Visibility: always shown for Material EB.
                 if (label === 'Review Reprogramming Request') {
-                    return rrIsPMPO && rrStatus === 'Requested';
+                    const visible = rrIsPMPO && rrStatus === 'Requested';
+                    if (this.isDebugEnabled()) {
+                        // eslint-disable-next-line no-console
+                        const payload = { rrIsPMPO, rrStatus, visible };
+                        console.warn('@@ [uNI_ButtonListClone] RR Review Reprogramming Request visibility', JSON.stringify(payload));
+                    }
+                    return visible;
                 }
                 else if (label === 'Edit Implementer and Contributor') {
                     // Visibility: always shown for Material EB.
@@ -2169,7 +2146,7 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                 }
                 else if (label === 'Define Stage 3') {
                     // Visibility: PM/PO + Stage 3 + OMT/PRC complete + Stage 3 files not selected.
-                    return rrIsPMPO && rrStage === 'Stage 3' && rrOmtStatus === 'Completed' && rrPrcStatus === 'Complete' && !rrStage3FilesSelected;
+                    return rrIsPMPO && rrStage === 'Stage 3' && rrOmtStatus === 'Completed' && rrPrcStatus === 'Completed' && !rrStage3FilesSelected;
                 }
                 else if (label === 'Edit GAD Timeline') {
                     // Visibility: PM/PO only.
@@ -2177,19 +2154,29 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                 }
                 else if (label === 'Edit Stage 3 Package (PT)') {
                     // Visibility: PM/PO + Stage 3 + Stage 3 files selected.
-                    return rrStage === 'Stage 3' && rrIsPMPO && rrStage3FilesSelected;
+                    return rrStage === 'Stage 3' && rrIsPMPO && rrStage3FilesSelected && rrStage3PTSubmitted;
                 }
                 else if (label === 'Edit Stage 4 Package (PT)') {
                     // Visibility: PM/PO + Stage 4.
-                    return rrStage === 'Stage 4' && rrIsPMPO;
+                    return rrStage === 'Stage 4' && rrIsPMPO && rrStage4PTSubmitted;
                 }
                 else if (label === 'Submit PRC Feedback') {
                     // Visibility: Stage 3 + PRC action owner + user is action owner.
-                    return rrStage === 'Stage 3' && rrActionOwner === 'PRC' && rrIsActionOwner;
+                    const visible = rrStage === 'Stage 3' && rrActionOwner === 'PRC' && rrIsActionOwner;
+                    if (this.isDebugEnabled()) {
+                        // eslint-disable-next-line no-console
+                        const payload = { rrStage, rrActionOwner, rrIsActionOwner, visible };
+                        console.warn('@@ [uNI_ButtonListClone] RR Submit PRC Feedback visibility', JSON.stringify(payload));
+                    }
+                    return visible;
                 }
                 else if (label === 'Submit to PRC for review') {
                     // Visibility: PM/PO only.
                     return rrIsPMPO;
+                }
+                else if (label === 'Start Stage 3') {
+                    // Visibility: GAD record type (no additional gating).
+                    return rrStage==='Stage 2' && rrIsPMPO && rrStage2Submitted && rrPrcDateConfirmed && rrOmtDateConfirmed;
                 }
                 else if (label === 'Upload Stage 3 Package (Pre-grantee)') {
                     // Visibility: PT + Stage 3 + not submitted + OMT/PRC complete + Stage 3 files selected.
@@ -2197,7 +2184,7 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                 }
                 else if (label === 'Upload Stage 3 Package (PT)') {
                     // Visibility: PM/PO + Stage 3 + OMT/PRC complete + Stage 3 files selected.
-                    return rrIsPMPO && rrStage === 'Stage 3' && rrOmtStatus === 'Completed' && rrPrcStatus === 'Complete' && rrStage3FilesSelected;
+                    return rrIsPMPO && rrStage === 'Stage 3' && rrOmtStatus === 'Completed' && rrPrcStatus === 'Completed' && rrStage3FilesSelected && !rrStage3PTSubmitted;
                 }
                 else if (label === 'Upload Stage 4 Package (Pre-Grantee)') {
                     // Visibility: PT + Stage 4 + Stage 4 not submitted.
@@ -2215,17 +2202,17 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                     // Visibility: PT + PT action owner + not all PT cleared.
                     return rrIsPT && rrActionOwner === 'PT' && !rrHasAllPTCleared;
                 }
-                else if (label === 'Clear the GAD Package As Director') {
+                else if (label === 'Clear the Package As Director') {
                     // Visibility: Director PD action owner + Director PD title + EB decision not taken.
                     return rrActionOwner === 'Director PD' && this.currentUserTitle === 'Director PD' && !rrEbDecisionTaken;
                 }
-                else if (label === 'Clear the GAD Package As ED') {
+                else if (label === 'Clear the Package As ED') {
                     // Visibility: ED action owner + Stage 4 + ED/ED Assistant title.
                     return rrActionOwner === 'ED' && rrStage === 'Stage 4' && (this.currentUserTitle === 'ED' || this.currentUserTitle === 'ED Assistant');
                 }
-                else if (label === 'Clear the GAD Package SMT') {
+                else if (label === 'Clear the Package SMT') {
                     // Visibility: SMT action owner + SMT review not stopped.
-                    return rrActionOwner === 'SMT' && !rrSmtStopped;
+                    return rrActionOwner === 'SMT' && !rrSmtStopped && rrIsActionOwner;
                 }
                 else if (label === 'Confirm No EB Review Required') {
                     // Visibility: EB decision taken + Director PD action owner + Stage 5 + Director PD title.
@@ -2241,13 +2228,13 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                 }
                 else if (label === 'Define Stage 1') {
                     // Visibility: PM/PO + Stage 1 + Stage 1 defined + project parameters not created.
-                    return rrIsPMPO && rrStage === 'Stage 1' && rrIsStage1Defined && !rrProjParams;
+                    return rrIsPMPO && rrStage === 'Stage 1' && !rrIsStage1Defined && rrProjParams;
                 }
                 else if (label === 'Define Stage 2') {
                     // Visibility: PM/PO + Stage 2 + PM/PO action owner + Stage 2 not submitted.
                     return rrIsPMPO && rrStage === 'Stage 2' && rrActionOwner === 'PM/PO' && !rrStage2Submitted;
                 }
-                else if (label === 'Develop GAD Timeline') {
+                else if (label === 'Timeline') {
                     // Visibility: PM/PO only.
                     return rrIsPMPO;
                 }
@@ -2265,7 +2252,7 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                 }
                 else if (label === 'Edit Stage 4') {
                     // Visibility: PM/PO + Stage 4.
-                    return rrIsPMPO && rrStage === 'Stage 4';
+                    return rrIsPMPO && rrStage === 'Stage 4' && rrStage4Submitted;
                 }
                 else if (label === 'Mark EB Review As Not Required') {
                     // Visibility: PM/PO + Stage 5 + PM/PO action owner.
@@ -2273,7 +2260,7 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                 }
                 else if (label === 'Mark EB Voting as concluded') {
                     // Visibility: GAM action owner + Stage 5 + EB review started but not done.
-                    return rrActionOwner === 'GAM' && rrStage === 'Stage 5' && !rrEbReviewDone && rrEbReviewStarted;
+                    return rrActionOwner === 'EB' && rrStage === 'Stage 5' && !rrEbReviewDone && rrEbReviewStarted;
                 }
                 else if (label === 'Mark EKO as Completed') {
                     // Visibility: PM/PO + Stage 1.
@@ -2293,7 +2280,7 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                 }
                 else if (label === 'Project Parameters') {
                     // Visibility: PM/PO only.
-                    return rrIsPMPO;
+                    return true;
                 }
                 else if (label === 'Report outcomes from OMT') {
                     // Visibility: PM/PO + OMT reviewers set + OMT not completed.
@@ -2305,15 +2292,15 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                 }
                 else if (label === 'Select PRC and Submit for Feedback') {
                     // Visibility: GAM action owner + Stage 3.
-                    return rrStage === 'Stage 3' && rrActionOwner === 'GAM';
+                    return rrStage === 'Stage 3' && rrActionOwner === 'GAM' && rrIsActionOwner ;
                 }
                 else if (label === 'Start EB Review') {
                     // Visibility: GAM action owner + Stage 5 + EB decision taken + EB review not started.
-                    return rrStage === 'Stage 5' && !rrEbReviewStarted && rrEbDecisionTaken && rrActionOwner === 'GAM';
+                    return rrStage === 'Stage 5' && rrIsActionOwner && !rrEbReviewStarted && rrEbDecisionTaken && rrActionOwner === 'GAM';
                 }
                 else if (label === 'Start OMT Review') {
                     // Visibility: PM/PO + Stage 3 + not submitted + OMT reviewers set.
-                    return rrIsPMPO && rrStage === 'Stage 3' && !rrStage3Submitted && rrOmtReviewerIds != null;
+                    return rrIsPMPO && rrStage === 'Stage 3' && rrOmtReviewerIds == null;
                 }
                 else if (label === 'Start PRC Review') {
                     // Visibility: PM/PO + Stage 3 + not submitted + PRC not started.
@@ -2321,7 +2308,7 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                 }
                 else if (label === 'Start Stage 4') {
                     // Visibility: PM/PO + Stage 3 + OMT/PRC complete + Stage 3 submitted.
-                    return rrIsPMPO && rrOmtStatus === 'Completed' && rrPrcStatus === 'Complete' && rrStage === 'Stage 3' && rrStage3Submitted;
+                    return rrIsPMPO && rrOmtStatus === 'Completed' && rrPrcStatus === 'Completed' && rrStage === 'Stage 3' && rrStage3Submitted;
                 }
                 else if (label === 'Start Supplier Registration') {
                     // Visibility: PM/PO only.
@@ -2341,7 +2328,7 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                 }
                 else if (label === 'Submit for SMT Clearance') {
                     // Visibility: PM/PO + Stage 4 + (PM/PO action owner OR all PT cleared) + not yet approved by Director/Legal.
-                    return rrIsPMPO && (rrActionOwner === 'PM/PO' || rrHasAllPTCleared) && !rrApprovedByDirPD && !rrApprovedByLegal && rrStage === 'Stage 4';
+                    return rrIsPMPO && (rrActionOwner === 'PM/PO' && rrHasAllPTCleared) && rrIsActionOwner && rrIsSubmittedForSMT && !rrApprovedByDirPD && !rrApprovedByLegal && rrHasAllPTCleared && rrStage === 'Stage 4';
                 }
                 else if (label === 'Submit to SMT members') {
                     // Visibility: PT + SMT review stopped + PT action owner.
@@ -2353,7 +2340,7 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                 }
                 else if (label === 'Upload ED Signed Face Sheet') {
                     // Visibility: ED action owner + Pending ED countersignature.
-                    return rrActionOwner === 'ED' && rrStage === 'Pending ED countersignature';
+                    return rrActionOwner === 'ED' && rrStage === 'Pending ED countersignature' && rrIsActionOwner;
                 }
                 else if (label === 'Upload Pre-Grantee Signed FaceSheet') {
                     // Visibility: PM/PO + Agreement ready for signature.
@@ -2364,11 +2351,11 @@ export default class UNI_ButtonListClone extends NavigationMixin(LightningElemen
                     return rrStage === 'Stage 1' &&
                         rrProjParams &&
                         rrIsStage1Defined &&
-                        (rrActionOwner === 'Grantee' || rrActionOwner === 'PT' || rrIsPT);
+                        ((rrActionOwner === 'Grantee' || rrActionOwner === 'PT')&& rrIsPT && !rrStage1Submitted);
                 }
                 else if (label === 'Upload Stage 2 package') {
                     // Visibility: PT + (Stage 2 + Pre-Grantee action owner) OR resubmit Stage 2.
-                    return rrIsPT && ((rrStage === 'Stage 2' && rrActionOwner === 'Pre-Grantee') || rrResubmitStage2);
+                    return rrIsPT && !rrStage2Submitted && ((rrStage === 'Stage 2' && rrActionOwner === 'Grantee') || rrResubmitStage2);
                 }
 
                 return false;

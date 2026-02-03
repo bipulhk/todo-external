@@ -79,6 +79,21 @@ export default class uNI_BudgetOverviewController extends LightningElement {
         if (this._params.version) {
             this.version = this._params.version;
         }
+        // Context provided by uNI_BudgetTab when loaded dynamically.
+        // Ensures RR-vs-IA behavior is enforced even without pageRef context.
+        if (this._params.contextRecordId) {
+            this.contextRecordId = this._params.contextRecordId;
+        }
+        if (this._params.contextObjectApiName) {
+            this.contextObjectApiName = this._params.contextObjectApiName;
+        }
+        if (this._params.rrLogframeVersion !== undefined && this._params.rrLogframeVersion !== null) {
+            this.rrDefaultVersion = String(this._params.rrLogframeVersion).trim();
+            this.rrDefaultLoaded = true;
+        }
+        if (this._params.contextRecordId || this._params.contextObjectApiName) {
+            this.updateReadOnlyState();
+        }
 
         console.log(
             'FX: after params set, recordId =',
@@ -473,6 +488,12 @@ export default class uNI_BudgetOverviewController extends LightningElement {
         if (this.contextObjectApiName === 'uNI_ReprogrammingRequest__c') {
             const ia = this._normalizeVersion(this.iaLogframeVersion);
             const rr = this._normalizeVersion(this.rrDefaultVersion);
+            const selected = this._normalizeVersion(this.version);
+            // In RR context, only the RR version should be editable.
+            if (rr && selected && selected !== rr) {
+                this.isReadOnly = true;
+                return;
+            }
             if (ia && rr && ia === rr) {
                 this.isReadOnly = true;
                 return;
@@ -513,8 +534,16 @@ export default class uNI_BudgetOverviewController extends LightningElement {
             this.baseReadOnly= this.isSubmitted;
             this.isBDDraft =
                 result.status === 'Draft' || result.status === 'In Progress';
-                this.isOverviewDraft =
+            this.isOverviewDraft =
                 result.overviewStatus === 'Saved' ||  result.overviewStatus === '';
+
+            // If viewing a non-RR version inside a Reprogramming Request page,
+            // ignore the global IA budget status so v1 isn't blocked by v2 draft.
+            const selected = this._normalizeVersion(this.version);
+            const rr = this._normalizeVersion(this.rrDefaultVersion);
+            if (this.contextObjectApiName === 'uNI_ReprogrammingRequest__c' && rr && selected && selected !== rr) {
+                this.isBDDraft = false;
+            }
             console.log(
                 'BudgetOverview: status result =',
                 result.status,

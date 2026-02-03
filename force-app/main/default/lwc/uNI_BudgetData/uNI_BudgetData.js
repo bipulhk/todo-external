@@ -67,6 +67,22 @@ export default class BudgetTable extends LightningElement {
         if (this._params.version) {
             this.version = this._params.version;
         }
+        // Context comes from uNI_BudgetTab when loaded via the dynamic LWC loader.
+        // This ensures RR-vs-IA behavior is enforced even without CurrentPageReference.
+        if (this._params.contextRecordId) {
+            this.contextRecordId = this._params.contextRecordId;
+        }
+        if (this._params.contextObjectApiName) {
+            this.contextObjectApiName = this._params.contextObjectApiName;
+        }
+        // Parent can pass RR version to avoid timing issues with UI API wires.
+        if (this._params.rrLogframeVersion !== undefined && this._params.rrLogframeVersion !== null) {
+            this.rrDefaultVersion = String(this._params.rrLogframeVersion).trim();
+            this.rrDefaultLoaded = true;
+        }
+        if (this._params.contextRecordId || this._params.contextObjectApiName) {
+            this.updateReadOnlyState();
+        }
 
         console.log(
             'BudgetTable: after params set, recordId =',
@@ -299,17 +315,41 @@ export default class BudgetTable extends LightningElement {
     }
 
     updateReadOnlyState() {
+        // Debug snapshot to explain why a version is editable/read-only.
+        const dbg = (label, extra) => {
+            // eslint-disable-next-line no-console
+            console.log(
+                `BudgetTable[${label}] context=${this.contextObjectApiName} ` +
+                `recordId=${this.recordId} version=${this.version} ` +
+                `rrVersion=${this.rrDefaultVersion} iaVersion=${this.iaLogframeVersion} ` +
+                `baseReadOnly=${this.baseReadOnly} extra=${extra || ''}`
+            );
+        };
+
         if (this.contextObjectApiName === 'uNI_ReprogrammingRequest__c') {
             const ia = this._normalizeVersion(this.iaLogframeVersion);
             const rr = this._normalizeVersion(this.rrDefaultVersion);
+            const selected = this._normalizeVersion(this.version);
+
+            // In RR context, only allow edits for the RR's own version.
+            // If viewing any other version (including v1), force read-only.
+            if (rr && selected && selected !== rr) {
+                this.isReadOnly = true;
+                dbg('rrContext:nonRRVersion', 'lock non-RR version');
+                return;
+            }
+
+            // If RR version equals IA version, never allow edits (drafting stays on IA only).
             if (ia && rr && ia === rr) {
                 this.isReadOnly = true;
+                dbg('rrContext:rrEqualsIa', 'lock when RR=IA');
                 return;
             }
         }
         const versionAhead = this.isVersionAhead;
         const locked = this.baseReadOnly && !versionAhead;
         this.isReadOnly = locked ? true : false;
+        dbg('final', `versionAhead=${versionAhead} locked=${locked}`);
     }
 
     _normalizeVersion(val) {

@@ -1,16 +1,23 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
-    <types>
-        <members>uNI_AnnualReportReprogrammingSelector</members>
-        <members>uNI_BudgetDataController</members>
-        <members>uNI_CloneBudgetData</members>
-        <members>uNI_CloneBudgetSourcesOfFunding</members>
-        <members>uNI_CloneCoFunding</members>
-        <members>uNI_CloneForeignExchangeRates</members>
-        <members>uNI_CloneLogframe</members>
-        <members>uNI_CloneMilestone</members>
-        <members>uNI_CloneStaffAllocations</members>
-        <name>ApexClass</name>
-    </types>
-    <version>65.0</version>
+	<types>
+		<members>uNI_AnnualReportReprogrammingSelector</members>
+		<members>uNI_BudgetDataController</members>
+		<members>uNI_CloneBudgetData</members>
+		<members>uNI_CloneBudgetSourcesOfFunding</members>
+		<members>uNI_CloneCoFunding</members>
+		<members>uNI_CloneForeignExchangeRates</members>
+		<members>uNI_CloneLogframe</members>
+		<members>uNI_CloneMilestone</members>
+		<members>uNI_CloneStaffAllocations</members>
+		<name>ApexClass</name>
+	</types>
+	<types>
+		<members>uNI_BudgetData</members>
+		<members>uNI_BudgetOverview</members>
+		<members>uNI_ButtonListClone</members>
+		<members>uNI_InvestmentPortalPage</members>
+		<name>LightningComponentBundle</name>
+	</types>
+	<version>65.0</version>
 </Package>

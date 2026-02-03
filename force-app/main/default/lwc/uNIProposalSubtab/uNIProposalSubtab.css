@@ -1,0 +1,60 @@
+.proposal-frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+  border: 1px solid #d8dde6;
+  border-radius: 0.5rem;
+  background: #ffffff;
+}
+
+.proposal-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #d8dde6;
+  background: #f4f6f9;
+  flex-wrap: wrap;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 0.5rem 0.875rem;
+  cursor: pointer;
+  font-weight: 600;
+  border-radius: 0.25rem;
+  color: #1f2a44;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-button:hover {
+  background-color: #e8f0fe;
+}
+
+.tab-button.active {
+  border-bottom-color: #0070d2;
+  background-color: #ffffff;
+}
+
+.proposal-content {
+  padding: 1rem 1.25rem 1.5rem;
+}
+
+.content-card {
+  border: 1px solid #d8dde6;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  padding: 1rem;
+}
+
+.content-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1f2a44;
+}
+
+.content-text {
+  margin: 0 0 0.75rem;
+  color: #344054;
+}

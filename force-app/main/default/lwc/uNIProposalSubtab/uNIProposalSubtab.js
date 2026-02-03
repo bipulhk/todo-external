@@ -1,11 +1,13 @@
 import { LightningElement, track, api, wire } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 
-export default class UNI_InvestmentPortalPage extends LightningElement {
+export default class UNIProposalSubtab extends LightningElement {
     _recordId;
+    _recordIdLogged = false;
+
+    @api params;
     @track tabs = [];
     @track activeTab;
-    _recordIdLogged = false;
 
     connectedCallback() {
         this.initTabs();
@@ -49,22 +51,32 @@ export default class UNI_InvestmentPortalPage extends LightningElement {
         }
     }
 
+    get resolvedRecordId() {
+        if (this.params) {
+            if (typeof this.params === 'string') {
+                return this.params;
+            }
+            if (typeof this.params === 'object') {
+                return this.params.recordId || this.params.id || this.params.c__recordId || null;
+            }
+        }
+        return this._recordId;
+    }
+
     get tabsForRender() {
         return this.tabs;
     }
 
     initTabs() {
-        if (!this._recordId) {
-            this._logRecordId('initTabs-missing');
-            return;
-        }
         const previousActiveId = this.activeTab && this.activeTab.id;
         this.tabs = [
-            { id: 'tab1', label: 'Details', lwcName: 'uNIInvestmentOverviewPage', recordId: this._recordId },
-            { id: 'tab2', label: 'Proposal', lwcName: 'c-u-n-i-investment-proposal', recordId: this._recordId },
-            { id: 'tab3', label: 'GAD', lwcName: 'c-u-n-i-investment-gad', recordId: this._recordId },
-            { id: 'tab4', label: 'Implementation', lwcName: 'c-u-n-i-investment-implementation', recordId: this._recordId }
+            { id: 'info', label: 'Proposal Information' },
+            { id: 'form', label: 'Proposal Form' },
+            { id: 'files', label: 'Proposal Files' },
+            { id: 'assessment-form', label: 'Proposal Assessment Form' },
+            { id: 'assessment-files', label: 'Proposal Assessment Files' }
         ];
+
         const resolvedActiveId = this.tabs.some(tab => tab.id === previousActiveId)
             ? previousActiveId
             : this.tabs[0].id;
@@ -92,9 +104,30 @@ export default class UNI_InvestmentPortalPage extends LightningElement {
         if (this._recordIdLogged && source !== 'initTabs-missing') {
             return;
         }
-        console.log('[uNI_InvestmentPortalPage] recordId', this._recordId, 'source=', source);
+        // eslint-disable-next-line no-console
+        console.log('[uNIProposalSubtab] recordId', this._recordId, 'source=', source);
         if (this._recordId) {
             this._recordIdLogged = true;
         }
+    }
+
+    get isInfoTab() {
+        return this.activeTab && this.activeTab.id === 'info';
+    }
+
+    get isProposalFormTab() {
+        return this.activeTab && this.activeTab.id === 'form';
+    }
+
+    get isProposalFilesTab() {
+        return this.activeTab && this.activeTab.id === 'files';
+    }
+
+    get isAssessmentFormTab() {
+        return this.activeTab && this.activeTab.id === 'assessment-form';
+    }
+
+    get isAssessmentFilesTab() {
+        return this.activeTab && this.activeTab.id === 'assessment-files';
     }
 }

@@ -11,6 +11,8 @@ import getRelatedRecordsByVersion
     from '@salesforce/apex/uNI_LogframeController.getRelatedRecordsByVersion';
 import getAvailableLogframeVersions
     from '@salesforce/apex/uNI_LogframeController.getAvailableLogframeVersions';
+import resolveInvestmentId
+    from '@salesforce/apex/uNI_LogframeController.resolveInvestmentId';
 
 import createUpdateRecord
     from '@salesforce/apex/uNI_LogframeController.createUpdateRecord';
@@ -41,6 +43,43 @@ export default class LogframeManagement extends LightningElement {
 
     @api version;                 // initial/default version (string)
     @track selectedVersion = '';  // '' means "Latest"
+    // params from dynamic loader (optional)
+    _params;
+    @api
+    get params() {
+        return this._params;
+    }
+    set params(value) {
+        this._params = value || {};
+        // Descriptive context wiring for dynamic loader usage:
+        // - recordId/contextRecordId: the page context record (RR or IA)
+        // - investmentId: resolved IA id (if parent already knows it)
+        // - version/rrLogframeVersion: optional version hints
+        if (this._params.recordId && !this.recordId) {
+            this.recordId = this._params.recordId;
+        }
+        if (this._params.contextRecordId && !this.recordId) {
+            this.recordId = this._params.contextRecordId;
+        }
+        if (this._params.investmentId && !this.investmentId) {
+            this.investmentId = this._params.investmentId;
+        }
+        if (this._params.version && !this.selectedVersion) {
+            this.selectedVersion = String(this._params.version);
+            this.explicitVersionProvided = true;
+        }
+        if (this._params.contextObjectApiName && !this.contextObjectApiName) {
+            this.contextObjectApiName = this._params.contextObjectApiName;
+        }
+        if (this._params.rrLogframeVersion !== undefined && this._params.rrLogframeVersion !== null) {
+            this.rrDefaultVersion = String(this._params.rrLogframeVersion).trim();
+            this.rrDefaultLoaded = true;
+        }
+
+        // Recompute effective IDs/defaults after params are injected.
+        this._recomputeEffectiveId();
+        this._attemptSetDefaultVersion();
+    }
 
     // server data
     @track outcomes = [];
@@ -70,6 +109,7 @@ export default class LogframeManagement extends LightningElement {
 
     // internal state
     effectiveInvestmentId;
+    resolvedInvestmentId; // IA id resolved directly from recordId (RR or IA)
     urlInvestmentId;
     rrInvestmentId;
     _selectedIndicatorRow;
@@ -109,23 +149,25 @@ export default class LogframeManagement extends LightningElement {
 
     // unified editability: editable if server says so, OR we’re viewing a non-live version
     get canEdit() {
-        const serverSays = !!this.isEditableLogframe;
-        // If logframe is finalized (server says false), never allow edits.
-        if (!serverSays) {
-            return false;
-        }
-        const baseEditable = serverSays;
+        const baseEditable = !!this.isEditableLogframe;
 
-        // In Reprogramming Request context, block edits if RR version == IA live version
+        // Match MilestoneTab behavior: in RR context, allow editing only when
+        // the selected version is different from the IA live version.
         if (this.contextObjectApiName === 'uNI_ReprogrammingRequest__c') {
-            if (this.iaDefaultLoaded && this.rrDefaultLoaded) {
-                const ia = this._normalizeVersion(this.liveVersion);
-                const rr = this._normalizeVersion(this.rrDefaultVersion);
-                if (ia && rr && ia === rr) {
-                    return false;
-                }
+            const ia = this._normalizeVersion(this.liveVersion);
+            const selected = this._normalizeVersion(this.selectedVersion || this.version);
+            if (ia && selected) {
+                return ia !== selected;
             }
+            const rr = this._normalizeVersion(this.rrDefaultVersion);
+            if (ia && rr) {
+                return ia !== rr;
+            }
+            // If we can't compare yet, fall back to server signal.
+            return baseEditable;
         }
+
+        // Default (IA context): respect server editability rules.
         return baseEditable;
     }
 
@@ -172,6 +214,7 @@ export default class LogframeManagement extends LightningElement {
 
         const candidate =
             this.investmentId ||
+            this.resolvedInvestmentId ||
             this.urlInvestmentId ||
             contextInvestmentId;
 
@@ -194,6 +237,18 @@ export default class LogframeManagement extends LightningElement {
         if (!this.selectedVersion && this.version) {
             this.selectedVersion = String(this.version);
             this.explicitVersionProvided = true;
+        }
+    }
+
+    // Resolve IA id directly from recordId to avoid dependency on object-name context.
+    // This mirrors BudgetTab's approach and keeps behavior unchanged when recordId is already IA.
+    @wire(resolveInvestmentId, { contextId: '$recordId' })
+    wiredResolvedInvestment({ data, error }) {
+        if (data !== undefined) {
+            this.resolvedInvestmentId = data;
+            this._recomputeEffectiveId();
+        } else if (error) {
+            console.error('Error resolving IA from recordId', error);
         }
     }
 
@@ -835,20 +890,32 @@ async handleAddOutputIndicator(e) {
     }
 
     // ===== Subindicator creation from modal =====
+    // ===== Subindicator creation from modal =====
     addSubIndicator() {
         const row = this._selectedIndicatorRow;
         if (!row) return;
 
         const parentId = row.uNI_Outcome__c || row.uNI_Output__c;
         const type = row.uNI_Outcome__c ? 'Outcome' : 'Output';
-        const heading = row.uNI_Indicator_Heading__c;
+        
+        // OLD CODE: const heading = row.uNI_Indicator_Heading__c;
+        // NEW CODE: Generate the incremented heading (e.g. 1.1.1, 1.1.2)
+        const heading = this.generateSubIndicatorHeading(row);
+        
         const disaggregation = this.disaggregationChange || row.uNI_Disaggregation__c || '';
 
-        createIndicatorRecord({ parentId, heading, type, subIndicator: true, disaggregation, version: this.currentVersion })
-            .then(() => refreshApex(this.wiredOutputs))
-            .then(() => this.showSuccessInsertToast())
-            .catch(err => console.error('Error creating sub-indicator:', err))
-            .finally(() => this.handleCloseModal());
+        createIndicatorRecord({ 
+            parentId, 
+            heading, 
+            type, 
+            subIndicator: true, 
+            disaggregation, 
+            version: this.currentVersion 
+        })
+        .then(() => refreshApex(this.wiredOutputs))
+        .then(() => this.showSuccessInsertToast())
+        .catch(err => console.error('Error creating sub-indicator:', err))
+        .finally(() => this.handleCloseModal());
     }
 
     // ===== Toasts =====
@@ -899,5 +966,37 @@ getNextIndicatorSeq(parentId, type) {
     }
     return next;
 }
+generateSubIndicatorHeading(parentRow) {
+        const parentHeading = (parentRow.uNI_Indicator_Heading__c || '').trim();
+        if (!parentHeading) return 'New Sub-Indicator';
+
+        // The prefix we are looking for (e.g., "Indicator P 1.1" becomes "Indicator P 1.1.")
+        const prefix = parentHeading + '.';
+        let maxSeq = 0;
+
+        // Loop through all indicators to find existing sub-indicators of this parent
+        this.indicators.forEach(ind => {
+            const currentHeading = (ind.uNI_Indicator_Heading__c || '').trim();
+            
+            // Check if this indicator is a child of the parent (starts with "ParentHeading.")
+            if (currentHeading.startsWith(prefix)) {
+                // Extract the suffix (the part after the dot)
+                const suffix = currentHeading.substring(prefix.length);
+                
+                // We only care if the suffix is a number (e.g. "1", "2")
+                // This ignores deeper nesting like "1.1" if we are currently at level "1"
+                // but handles the immediate children.
+                if (/^\d+$/.test(suffix)) {
+                    const num = parseInt(suffix, 10);
+                    if (num > maxSeq) {
+                        maxSeq = num;
+                    }
+                }
+            }
+        });
+
+        // Return ParentHeading + "." + (Max + 1)
+        return prefix + (maxSeq + 1);
+    }
 
 }

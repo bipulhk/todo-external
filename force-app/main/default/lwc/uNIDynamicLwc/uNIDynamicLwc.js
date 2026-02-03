@@ -58,7 +58,9 @@ export default class UNIDynamicLwc extends LightningElement {
       'uNI_StaffAllocations' : 'c/uNI_StaffAllocations', 
       'uNI_sd_milestoneTracker' : 'c/uNI_sd_milestoneTracker',
       'uNI_sd_milestoneTimeline' : 'c/uNI_sd_milestoneTimeline',
-      'uNIInvestmentOverviewPage': 'c/uNIInvestmentOverviewPage'
+      'uNIInvestmentOverviewPage': 'c/uNIInvestmentOverviewPage',
+      'c-u-n-i-investment-proposal': 'c/uNIProposalSubtab',
+      'c-u-n-i-investment-implementation': 'c/uNIInvestmentSubtab'
     };
 
     return map[lwcName];

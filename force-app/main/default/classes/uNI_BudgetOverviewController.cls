@@ -274,7 +274,7 @@ public class uNI_BudgetOverviewController {
                    uNI_Investment_record_type__c,
                    uNI_Version__c
             FROM uNI_SummaryBudget__c
-            WHERE uNI_IndividualApplication__c = :indAppId and uNI_Investment_record_type__c ='GAD'
+            WHERE uNI_IndividualApplication__c = :indAppId and uNI_Investment_record_type__c ='Investment'
               AND is_Full_Row_Span__c = false
               AND uNI_Version__c = :versionToUse
             ORDER BY is_Lead_Organization_1__c DESC

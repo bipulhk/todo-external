@@ -46,3 +46,12 @@ $RECYCLE.BIN/
 **/__pycache__/
 **/.venv/
 **/venv/
+.vsode
+
+
+objects
+flexipages
+permissionsets
+triggers
+tabs
+staticresources

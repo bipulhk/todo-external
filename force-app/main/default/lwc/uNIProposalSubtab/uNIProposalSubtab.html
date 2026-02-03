@@ -1,0 +1,105 @@
+<template>
+  <section class="proposal-frame">
+    <nav class="proposal-tabs" aria-label="Proposal Subtabs">
+      <template for:each={tabsForRender} for:item="tab">
+        <button
+          key={tab.id}
+          class={tab.cssClass}
+          data-id={tab.id}
+          onclick={handleTabClick}
+          title={tab.label}
+        >
+          {tab.label}
+        </button>
+      </template>
+    </nav>
+
+    <div class="proposal-content">
+      <template if:true={isInfoTab}>
+        <div class="content-card">
+          <lightning-accordion allow-multiple-sections-open>
+            <lightning-accordion-section name="proposalInfo" label="Proposal Information">
+              <template if:true={resolvedRecordId}>
+                <lightning-record-form
+                  record-id={resolvedRecordId}
+                  object-api-name="IndividualApplication"
+                  layout-type="Full"
+                  mode="view"
+                  columns="2"
+                >
+                </lightning-record-form>
+              </template>
+              <template if:false={resolvedRecordId}>
+                <p class="slds-text-color_error slds-text-body_small">
+                  No record id was resolved for this Proposal.
+                </p>
+              </template>
+            </lightning-accordion-section>
+          </lightning-accordion>
+        </div>
+      </template>
+
+      <template if:true={isProposalFormTab}>
+        <div class="content-card">
+          <h3 class="content-title">Proposal Form</h3>
+          <p class="content-text">
+            Hook the proposal form component or flow here. The record context will be available via `recordId`.
+          </p>
+        </div>
+      </template>
+
+      <template if:true={isProposalFilesTab}>
+        <div class="content-card">
+          <h3 class="content-title">Proposal Files</h3>
+          <p class="content-text">
+            Upload files related to this proposal.
+          </p>
+          <template if:true={resolvedRecordId}>
+            <lightning-file-upload
+              record-id={resolvedRecordId}
+              label="Upload Proposal Files"
+              multiple
+            >
+            </lightning-file-upload>
+          </template>
+          <template if:false={resolvedRecordId}>
+            <p class="slds-text-color_error slds-text-body_small">
+              No record id was resolved for file uploads.
+            </p>
+          </template>
+        </div>
+      </template>
+
+      <template if:true={isAssessmentFormTab}>
+        <div class="content-card">
+          <h3 class="content-title">Proposal Assessment Form</h3>
+          <p class="content-text">
+            Hook the proposal assessment form component or flow here.
+          </p>
+        </div>
+      </template>
+
+      <template if:true={isAssessmentFilesTab}>
+        <div class="content-card">
+          <h3 class="content-title">Proposal Assessment Files</h3>
+          <p class="content-text">
+            Upload assessment files related to this proposal.
+          </p>
+          <template if:true={resolvedRecordId}>
+            <lightning-file-upload
+              record-id={resolvedRecordId}
+              label="Upload Assessment Files"
+              multiple
+            >
+            </lightning-file-upload>
+          </template>
+          <template if:false={resolvedRecordId}>
+            <p class="slds-text-color_error slds-text-body_small">
+              No record id was resolved for file uploads.
+            </p>
+          </template>
+        </div>
+      </template>
+    </div>
+  </section>
+</template>

@@ -1,0 +1,248 @@
+<template>
+  <section class="implementation-frame">
+    <nav class="implementation-tabs" aria-label="Implementation Tabs">
+      <template for:each={tabsForRender} for:item="tab">
+        <button
+          key={tab.id}
+          class={tab.cssClass}
+          data-id={tab.id}
+          onclick={handlePrimaryTabClick}
+          title={tab.label}
+        >
+          {tab.label}
+        </button>
+      </template>
+      <template if:true={hasMoreTabs}>
+        <lightning-button-menu
+          label="More"
+          alternative-text="More tabs"
+          onselect={handleMoreSelect}
+          class={moreMenuClass}
+        >
+          <template for:each={moreTabs} for:item="tab">
+            <lightning-menu-item key={tab.id} value={tab.id} label={tab.label}></lightning-menu-item>
+          </template>
+        </lightning-button-menu>
+      </template>
+    </nav>
+
+    <div class="implementation-content">
+      <template if:true={isFinalizedTab}>
+        <div class="content-card">
+          <nav class="subtabs" aria-label="Finalized Package Tabs">
+            <template for:each={finalizedTabs} for:item="tab">
+              <button
+                key={tab.id}
+                class={tab.cssClass}
+                data-id={tab.id}
+                onclick={handleFinalizedTabClick}
+                title={tab.label}
+              >
+                {tab.label}
+              </button>
+            </template>
+          </nav>
+
+          <template if:true={isGrantPackageTab}>
+            <nav class="subtabs tier-tabs" aria-label="Grant Package Tabs">
+              <template for:each={grantTabs} for:item="tab">
+                <button
+                  key={tab.id}
+                  class={tab.cssClass}
+                  data-id={tab.id}
+                  onclick={handleGrantTabClick}
+                  title={tab.label}
+                >
+                  {tab.label}
+                </button>
+              </template>
+            </nav>
+
+            <div class="panel">
+              <template if:true={isRequiredFilesTab}>
+                <h3 class="panel-title">Required Files</h3>
+                <template if:true={resolvedRecordId}>
+                  <lightning-file-upload
+                    record-id={resolvedRecordId}
+                    label="Upload Required Files"
+                    multiple
+                  >
+                  </lightning-file-upload>
+                </template>
+                <template if:false={resolvedRecordId}>
+                  <p class="slds-text-color_error slds-text-body_small">
+                    No record id was resolved for file uploads.
+                  </p>
+                </template>
+              </template>
+
+              <template if:true={isSupportingDocsTab}>
+                <h3 class="panel-title">Supporting Docs</h3>
+                <template if:true={resolvedRecordId}>
+                  <lightning-file-upload
+                    record-id={resolvedRecordId}
+                    label="Upload Supporting Docs"
+                    multiple
+                  >
+                  </lightning-file-upload>
+                </template>
+                <template if:false={resolvedRecordId}>
+                  <p class="slds-text-color_error slds-text-body_small">
+                    No record id was resolved for file uploads.
+                  </p>
+                </template>
+              </template>
+            </div>
+          </template>
+
+          <template if:true={isGranteeFacesheetTab}>
+            <div class="panel">
+              <h3 class="panel-title">Grantee Signed Facesheet</h3>
+              <p class="panel-text">Upload or review the grantee signed facesheet here.</p>
+              <template if:true={resolvedRecordId}>
+                <lightning-file-upload
+                  record-id={resolvedRecordId}
+                  label="Upload Grantee Signed Facesheet"
+                  multiple
+                >
+                </lightning-file-upload>
+              </template>
+            </div>
+          </template>
+
+          <template if:true={isEdFacesheetTab}>
+            <div class="panel">
+              <h3 class="panel-title">ED Signed Facesheet</h3>
+              <p class="panel-text">Upload or review the ED signed facesheet here.</p>
+              <template if:true={resolvedRecordId}>
+                <lightning-file-upload
+                  record-id={resolvedRecordId}
+                  label="Upload ED Signed Facesheet"
+                  multiple
+                >
+                </lightning-file-upload>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+
+      <template if:true={isLogframeTab}>
+        <div class="content-card">
+          <h3 class="panel-title">Logframe</h3>
+          <p class="panel-text">
+            Hook the logframe component or flow here.
+          </p>
+        </div>
+      </template>
+
+      <template if:true={isMilestonesTab}>
+        <div class="content-card">
+          <h3 class="panel-title">Milestones</h3>
+          <p class="panel-text">
+            Hook the milestones component or flow here.
+          </p>
+        </div>
+      </template>
+
+      <template if:true={isGanttTab}>
+        <div class="content-card">
+          <h3 class="panel-title">Gantt Chart</h3>
+          <p class="panel-text">
+            Hook the Gantt chart component here.
+          </p>
+        </div>
+      </template>
+
+      <template if:true={isBudgetTab}>
+        <div class="content-card">
+          <h3 class="panel-title">Budget</h3>
+          <p class="panel-text">
+            Hook the budget component here.
+          </p>
+        </div>
+      </template>
+
+      <template if:true={isDisbursementsTab}>
+        <div class="content-card">
+          <h3 class="panel-title">Disbursements</h3>
+          <p class="panel-text">
+            Hook the disbursement component here.
+          </p>
+        </div>
+      </template>
+
+      <template if:true={isReportsTab}>
+        <div class="content-card">
+          <h3 class="panel-title">Reports</h3>
+          <p class="panel-text">
+            Hook the reports component here.
+          </p>
+        </div>
+      </template>
+
+      <template if:true={isReprogrammingTab}>
+        <div class="content-card">
+          <h3 class="panel-title">Reprogramming</h3>
+          <p class="panel-text">
+            Hook the reprogramming component here.
+          </p>
+        </div>
+      </template>
+
+      <template if:true={isIncidentsTab}>
+        <div class="content-card">
+          <h3 class="panel-title">Incidents</h3>
+          <p class="panel-text">
+            Hook the incidents component here.
+          </p>
+        </div>
+      </template>
+
+      <template if:true={isManagementTab}>
+        <div class="content-card">
+          <h3 class="panel-title">Management Actions</h3>
+          <p class="panel-text">
+            Hook the management actions component here.
+          </p>
+        </div>
+      </template>
+
+      <template if:true={isRiskTab}>
+        <div class="content-card">
+          <h3 class="panel-title">Risk Register</h3>
+          <p class="panel-text">
+            Hook the risk register component here.
+          </p>
+        </div>
+      </template>
+
+      <template if:true={isClosureTab}>
+        <div class="content-card">
+          <h3 class="panel-title">Closure</h3>
+          <p class="panel-text">
+            Hook the closure component here.
+          </p>
+        </div>
+      </template>
+
+      <template if:true={isAuditTab}>
+        <div class="content-card">
+          <h3 class="panel-title">Audit</h3>
+          <p class="panel-text">
+            Hook the audit component here.
+          </p>
+        </div>
+      </template>
+
+      <template if:true={isMoreTab}>
+        <div class="content-card">
+          <h3 class="panel-title">{activeTab.label}</h3>
+          <p class="panel-text">
+            Additional implementation resources will appear here.
+          </p>
+        </div>
+      </template>
+    </div>
+  </section>
+</template>
